@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Choose content{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Copy content", url_for('sync.home')), ("From " ~ base, None)]) }}
+<h1>Content on {{ catalog.site_name or 'the other STEMBox' }}</h1>
+<p class="muted">Connected to <span class="code">{{ base }}</span>. Tick the courses to copy to this STEMBox.</p>
+{% set ns = namespace(any=false) %}
+<form method="post" action="{{ url_for('sync.wifi_pull') }}" class="card form" data-busy-text="Copying… this can take a few minutes">
+  {{ m.csrf() }}
+  <input type="hidden" name="token" value="{{ token }}">
+  {% for s in catalog.subjects %}{% if s.courses %}{% set ns.any = true %}
+  <fieldset>
+    <legend>{{ s.name }}</legend>
+    {% for c in s.courses %}
+    <label class="check"><input type="checkbox" name="course_uuid" value="{{ c.uuid }}">
+      {{ c.title }} <small>· {{ c.published }}/{{ c.lessons }} lessons published · {{ c.quizzes }} quizzes{% if c.level %} · {{ c.level }}{% endif %}</small></label>
+    {% endfor %}
+  </fieldset>
+  {% endif %}{% endfor %}
+  {% if ns.any %}
+  <label class="check"><input type="checkbox" name="include_drafts" value="1"> Also copy drafts</label>
+  <button type="submit" class="btn btn-primary">Copy to this STEMBox</button>
+  {% else %}
+  <p class="muted">The other STEMBox has no content to share.</p>
+  {% endif %}
+</form>
+{% endblock %}

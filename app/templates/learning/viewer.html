@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% import "_resource.html" as res %}
+{% block title %}{{ r['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([(course['title'], url_for('learning.course', course_id=course['id'])), (lesson['title'], url_for('learning.lesson', lesson_id=lesson['id'])), (r['title'], None)]) }}
+{% set src = url_for('learning.media', uuid=r['uuid']) %}
+<section class="card">
+  <h1>{{ r['title'] }}</h1>
+  {% if r['type'] == 'pdf' %}
+    <object class="pdf-frame" data="{{ src }}" type="application/pdf" aria-label="{{ r['title'] }}">
+      <div class="alert alert-info">
+        <p>This device cannot show the PDF inside the page.</p>
+        <a class="btn btn-primary" href="{{ src }}">Open the PDF</a>
+      </div>
+    </object>
+    <div class="actions">
+      <a class="btn btn-secondary" href="{{ src }}">Open full screen</a>
+      <a class="btn btn-secondary" href="{{ src }}?download=1">Download</a>
+    </div>
+  {% elif r['type'] == 'video' %}
+    <video class="media-frame" controls preload="metadata" playsinline src="{{ src }}"
+      {% if current_user['role'] == 'student' %}data-save-position="{{ url_for('learning.save_position', resource_id=r['id']) }}" data-start="{{ start }}"{% endif %}>
+      Your browser cannot play this video. <a href="{{ src }}?download=1">Download it</a>.
+    </video>
+    {% if start %}<p class="muted">The video continues where you stopped last time.</p>{% endif %}
+  {% elif r['type'] == 'audio' %}
+    <audio controls preload="metadata" src="{{ src }}"
+      {% if current_user['role'] == 'student' %}data-save-position="{{ url_for('learning.save_position', resource_id=r['id']) }}" data-start="{{ start }}"{% endif %}></audio>
+  {% else %}
+    <img src="{{ src }}" alt="{{ r['title'] }}">
+  {% endif %}
+</section>
+<a class="btn btn-secondary" href="{{ url_for('learning.lesson', lesson_id=lesson['id']) }}">← Back to the lesson</a>
+{% endblock %}

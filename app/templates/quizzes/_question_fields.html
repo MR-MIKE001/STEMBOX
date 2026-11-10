@@ -1,0 +1,16 @@
+{# Shared question + answers fields. Expects: form (text, raw list, correct index), max_choices. #}
+<label for="qtext">Question</label>
+<textarea id="qtext" name="text" required>{{ form.text }}</textarea>
+<fieldset>
+  <legend>Answers – click the round button next to the correct one</legend>
+  {% for i in range(max_choices) %}
+  {% set value = (form.raw[i] if form.raw and i < form.raw|length else '') %}
+  <div class="choice">
+    <input type="radio" name="correct" value="{{ i }}" id="correct-{{ i }}" aria-label="Answer {{ i + 1 }} is correct"
+           {% if form.correct == i %}checked{% endif %}>
+    <label for="choice-{{ i }}" class="sr-only">Answer {{ i + 1 }}</label>
+    <input type="text" id="choice-{{ i }}" name="choice_{{ i }}" value="{{ value }}"
+           placeholder="Answer {{ i + 1 }}{{ ' (optional)' if i >= 2 else '' }}">
+  </div>
+  {% endfor %}
+</fieldset>

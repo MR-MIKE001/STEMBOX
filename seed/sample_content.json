@@ -1,0 +1,104 @@
+{
+  "_comment": "PLACEHOLDER DEVELOPMENT CONTENT ONLY. Load with `flask seed-dev`, remove with `flask unseed-dev`. Everything created from this file is flagged is_sample=1 and titled [SAMPLE].",
+  "users": [
+    {"username": "admin", "name": "[SAMPLE] Admin", "role": "admin", "password": "admin123"},
+    {"username": "teacher1", "name": "[SAMPLE] Teacher Amina", "role": "teacher", "password": "teacher123"},
+    {"username": "teacher2", "name": "[SAMPLE] Teacher Brian", "role": "teacher", "password": "teacher123"},
+    {"username": "student1", "name": "[SAMPLE] Student Chen", "role": "student", "password": "student123"},
+    {"username": "student2", "name": "[SAMPLE] Student Dana", "role": "student", "password": "student123"},
+    {"username": "student3", "name": "[SAMPLE] Student Eli", "role": "student", "password": "student123"}
+  ],
+  "classes": [
+    {"name": "[SAMPLE] Grade 7A", "level": "Grade 7", "teachers": ["teacher1"], "students": ["student1", "student2"]},
+    {"name": "[SAMPLE] Grade 8B", "level": "Grade 8", "teachers": ["teacher2"], "students": ["student3"]}
+  ],
+  "subjects": [
+    {
+      "name": "[SAMPLE] Mathematics",
+      "description": "Placeholder subject for testing STEMBox.",
+      "courses": [
+        {
+          "title": "[SAMPLE] Fractions",
+          "level": "Grade 7",
+          "description": "A short placeholder course about fractions.",
+          "author": "teacher1",
+          "topics": [
+            {
+              "title": "Understanding fractions",
+              "lessons": [
+                {
+                  "title": "What is a fraction?",
+                  "body": "This is **sample content** for testing STEMBox.\n\nA fraction shows part of a whole. In 3/4 the bottom number (4) says how many equal parts the whole is cut into. The top number (3) says how many parts we have.\n\n## Key words\n- **Numerator**: the top number\n- **Denominator**: the bottom number",
+                  "resources": [
+                    {"type": "pdf", "title": "Fractions worksheet (sample)", "generate": "pdf"},
+                    {"type": "image", "title": "Fraction picture (sample)", "generate": "png"}
+                  ]
+                },
+                {
+                  "title": "Adding fractions",
+                  "body": "This is **sample content** for testing STEMBox.\n\nTo add fractions with the same denominator, add the numerators and keep the denominator.\n\n1. Check the denominators are the same\n2. Add the top numbers\n3. Keep the bottom number",
+                  "resources": [
+                    {"type": "audio", "title": "Listen: adding fractions (sample tone)", "generate": "wav"}
+                  ]
+                }
+              ]
+            }
+          ],
+          "quizzes": [
+            {
+              "title": "Fractions check",
+              "description": "Sample quiz with four questions.",
+              "lesson": "Adding fractions",
+              "pass_mark": 50,
+              "questions": [
+                {"text": "In the fraction 3/4, what is the denominator?", "choices": ["3", "4", "7", "12"], "correct": 1},
+                {"text": "What is 1/5 + 2/5?", "choices": ["3/10", "3/5", "2/5", "1/5"], "correct": 1},
+                {"text": "Which fraction is equal to one half?", "choices": ["2/4", "1/3", "3/4", "2/3"], "correct": 0},
+                {"text": "What is the top number of a fraction called?", "choices": ["Denominator", "Divider", "Numerator", "Total"], "correct": 2}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[SAMPLE] Science",
+      "description": "Placeholder subject for testing STEMBox.",
+      "courses": [
+        {
+          "title": "[SAMPLE] Living things",
+          "level": "Grade 8",
+          "description": "A short placeholder course about plants.",
+          "author": "teacher2",
+          "class": "[SAMPLE] Grade 8B",
+          "topics": [
+            {
+              "title": "Plants",
+              "lessons": [
+                {
+                  "title": "How plants make food",
+                  "body": "# Photosynthesis\nThis is **sample content** for testing STEMBox.\n\nPlants use sunlight, water and carbon dioxide to make sugar and oxygen.",
+                  "resources": [
+                    {"type": "pdf", "title": "Plant diagram notes (sample)", "generate": "pdf"}
+                  ]
+                }
+              ]
+            }
+          ],
+          "quizzes": [
+            {
+              "title": "Plants quiz",
+              "description": "Sample quiz.",
+              "lesson": "How plants make food",
+              "pass_mark": 60,
+              "questions": [
+                {"text": "Which gas do plants take in to make food?", "choices": ["Oxygen", "Carbon dioxide", "Nitrogen"], "correct": 1},
+                {"text": "What do plants need from the sun?", "choices": ["Heat only", "Light", "Nothing"], "correct": 1}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

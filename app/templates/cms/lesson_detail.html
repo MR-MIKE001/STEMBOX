@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% import "_resource.html" as res %}
+{% block title %}{{ lesson['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), (course['title'], url_for('cms.course_detail', course_id=course['id'])), (lesson['title'], None)]) }}
+<div class="page-head">
+  <div>
+    <h1>{{ lesson['title'] }}</h1>
+    <p>{{ m.status_badge(lesson['status']) }}{% if topic %} · Topic: {{ topic['title'] }}{% endif %}
+      {% if lesson['published_at'] and lesson['status'] == 'published' %} · published {{ lesson['published_at']|date }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('cms.lesson_edit', lesson_id=lesson['id']) }}">Edit text</a>
+    <a class="btn btn-secondary" href="{{ url_for('learning.lesson', lesson_id=lesson['id']) }}">See as a student</a>
+  </div>
+</div>
+
+{# ---- Publishing panel ---- #}
+<section class="card">
+  <h2>Publishing</h2>
+  {% if lesson['status'] == 'published' %}
+    <p>Students can see this lesson.</p>
+    {{ m.post_button(url_for('cms.lesson_unpublish', lesson_id=lesson['id']), "Hide from students (back to draft)", "btn-secondary") }}
+  {% elif lesson['status'] == 'pending' %}
+    <p>This lesson is waiting for an administrator to approve it.</p>
+    {{ m.post_button(url_for('cms.lesson_unpublish', lesson_id=lesson['id']), "Cancel the request", "btn-secondary") }}
+  {% else %}
+    {% if review and review['status'] == 'rejected' %}
+    <div class="alert alert-warning">An administrator sent this lesson back{% if review['reviewer_name'] %} ({{ review['reviewer_name'] }}){% endif %}.
+      {% if review['note'] %}<br><strong>Note:</strong> {{ review['note'] }}{% endif %}</div>
+    {% endif %}
+    <p>This lesson is a draft. Only teachers can see it.</p>
+    {{ m.post_button(url_for('cms.lesson_publish', lesson_id=lesson['id']),
+                     "Publish now" if direct else "Ask for approval to publish", "btn-success") }}
+  {% endif %}
+</section>
+
+{# ---- Files ---- #}
+<section class="card">
+  <h2>Files ({{ resources|length }})</h2>
+  {% if resources %}
+  <ul class="list">
+    {% for r in resources %}
+    <li>
+      <span class="grow"><strong>{{ r['title'] }}</strong><br>
+        <small>{{ TYPE_LABELS[r['type']] }} · {{ r['size']|filesize }} · {{ r['original_name'] }}</small></span>
+      <span class="actions">
+        {% if not loop.first %}{{ m.post_button(url_for('cms.resource_move', resource_id=r['id'], direction='up'), "↑", "btn-small btn-secondary") }}{% endif %}
+        {% if not loop.last %}{{ m.post_button(url_for('cms.resource_move', resource_id=r['id'], direction='down'), "↓", "btn-small btn-secondary") }}{% endif %}
+        <a class="btn btn-small btn-secondary" href="{{ url_for('learning.view_resource', resource_id=r['id']) }}">Preview</a>
+        <a class="btn btn-small btn-secondary" href="{{ url_for('cms.resource_edit', resource_id=r['id']) }}">Rename or replace</a>
+        {{ m.post_button(url_for('cms.resource_delete', resource_id=r['id']), "Remove", "btn-small btn-danger",
+                         confirm="Remove “" ~ r['title'] ~ "” from this lesson?") }}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">No files yet.</p>{% endif %}
+
+  <h3>Add a file</h3>
+  <form method="post" action="{{ url_for('cms.resource_upload', lesson_id=lesson['id']) }}" enctype="multipart/form-data"
+        class="form" data-busy-text="Uploading… please wait">
+    {{ m.csrf() }}
+    <label for="file">Choose the file</label>
+    <input id="file" name="file" type="file" accept="{{ accept }}" required>
+    <p id="file-info" class="hint">PDF (up to {{ limits.pdf }} MB), video MP4/WebM (up to {{ limits.video }} MB),
+      picture PNG/JPG/GIF/WebP (up to {{ limits.image }} MB), audio MP3/OGG/WAV/M4A (up to {{ limits.audio }} MB).</p>
+    <label for="type">Kind of file</label>
+    <select id="type" name="type">
+      <option value="auto">Work it out from the file name</option>
+      {% for t in types %}<option value="{{ t }}">{{ TYPE_LABELS[t] }}</option>{% endfor %}
+    </select>
+    <label for="rtitle">Title shown to students (optional)</label>
+    <input id="rtitle" name="title" placeholder="Uses the file name if empty">
+    <button class="btn btn-primary" type="submit">Upload</button>
+  </form>
+</section>
+
+{# ---- Preview ---- #}
+<section class="card">
+  <h2>Preview</h2>
+  <div class="lesson-body">{{ lesson['body']|lesson_text }}</div>
+  {% for r in resources %}{{ res.show(r) }}{% endfor %}
+  {% if not lesson['body'] and not resources %}<p class="muted">Nothing to show yet.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Delete lesson</h2>
+  {{ m.post_button(url_for('cms.lesson_delete', lesson_id=lesson['id']), "Delete this lesson", "btn-danger",
+                   confirm="Delete this lesson and its files? This cannot be undone.") }}
+</section>
+{% endblock %}

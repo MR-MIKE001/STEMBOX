@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="card narrow center">
+  <p class="error-code">Error {{ code }}</p>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <p><a class="btn btn-primary" href="{{ url_for('main.index') }}">Go to the home page</a></p>
+</section>
+{% endblock %}

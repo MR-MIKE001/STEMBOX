@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Teacher{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Hello, {{ current_user['name'] }}</h1>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('cms.course_new') }}">+ New course</a>
+    <a class="btn btn-secondary" href="{{ url_for('cms.content_home') }}">My content</a>
+  </div>
+</div>
+
+{% for r in returned %}
+<div class="alert alert-warning">The administrator sent back “<a href="{{ url_for('cms.lesson_detail', lesson_id=r['lesson_id']) }}">{{ r['lesson_title'] }}</a>”.
+  {% if r['note'] %}Note: {{ r['note'] }}{% endif %}</div>
+{% endfor %}
+
+<h2>My classes</h2>
+{% if classes %}
+<div class="grid grid-3">
+  {% for c, s in classes %}
+  <a class="tile" href="{{ url_for('progress.class_report', class_id=c['id']) }}">
+    <h3>{{ c['name'] }}</h3>
+    <p>{{ s.student_count }} students</p>
+    <div class="meta">Lessons finished {{ m.progress_bar(s.completion_rate, 100, "Lessons finished") }}
+      Average quiz score: <strong>{{ s.avg_score ~ '%' if s.avg_score is not none else '–' }}</strong></div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">You are not the teacher of a class yet. The administrator can add you to your classes.</p>
+{% endif %}
+
+<div class="two-col">
+  <section class="card">
+    <h2>My courses</h2>
+    {% if courses %}
+    <ul class="list">
+      {% for c in courses %}
+      <li><span class="grow"><a href="{{ url_for('cms.course_detail', course_id=c['id']) }}"><strong>{{ c['title'] }}</strong></a><br>
+        <small>{{ c['subject_name'] }} · {{ c['lesson_count'] }} lessons</small></span>
+        {% if c['drafts'] %}<span class="badge badge-draft">{{ c['drafts'] }} draft</span>{% endif %}
+        {% if c['pending'] %}<span class="badge badge-pending">{{ c['pending'] }} waiting</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    {{ m.empty("You have no courses yet.", url_for('cms.course_new'), "+ Create your first course") }}
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Latest quiz results</h2>
+    {% if recent %}
+    <ul class="list">
+      {% for a in recent %}
+      {% set pct = percent(a['score'], a['total']) %}
+      <li><span class="grow"><strong>{{ a['student_name'] }}</strong><br><small>{{ a['quiz_title'] }} · {{ a['finished_at']|dt }}</small></span>
+        <span class="badge {{ 'badge-pass' if pct >= a['pass_mark'] else 'badge-fail' }}">{{ pct }}%</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">No quiz results yet.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

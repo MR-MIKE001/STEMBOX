@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Search{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Subjects", url_for('learning.subjects')), ("Search", None)]) }}
+<h1>Search lessons</h1>
+<form method="get" class="card filters" role="search">
+  <div><label for="q">Words to find</label><input id="q" name="q" type="search" value="{{ q }}" autofocus></div>
+  <button class="btn btn-primary" type="submit">Search</button>
+</form>
+{% if q %}
+  {% if results %}
+  <ul class="lesson-list">
+    {% for r in results %}
+    <li><a href="{{ url_for('learning.lesson', lesson_id=r['id']) }}"><span>{{ r['title'] }}</span>
+      <span class="kind">{{ r['subject_name'] }} › {{ r['course_title'] }}</span></a></li>
+    {% endfor %}
+  </ul>
+  {% else %}{{ m.empty("No lessons found. Try a shorter word.") }}{% endif %}
+{% endif %}
+{% endblock %}

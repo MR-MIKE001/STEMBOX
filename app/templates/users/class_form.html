@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ 'Edit class' if klass else 'New class' }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Classes", url_for('users.class_list')), ('Edit class' if klass else 'New class', None)]) }}
+<section class="card narrow">
+  <h1>{{ 'Edit class' if klass else 'New class' }}</h1>
+  {{ m.errors(errors) }}
+  <form method="post" class="form">
+    {{ m.csrf() }}
+    <label for="name">Class name</label>
+    <input id="name" name="name" value="{{ form['name'] }}" placeholder="Grade 7A" required autofocus>
+    <label for="level">Level or grade (optional)</label>
+    <input id="level" name="level" value="{{ form['level'] }}" placeholder="Grade 7">
+    <button type="submit" class="btn btn-primary btn-block">Save class</button>
+  </form>
+</section>
+{% endblock %}

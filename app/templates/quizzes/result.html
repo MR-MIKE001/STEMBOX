@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Result: {{ quiz['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([(course['title'], url_for('learning.course', course_id=course['id'])), (quiz['title'], url_for('quizzes.quiz_start_page', quiz_id=quiz['id'])), ("Result", None)]) }}
+<section class="card medium center">
+  {% if attempt['user_id'] != current_user['id'] %}<p class="muted">Result for {{ student['name'] }}</p>{% endif %}
+  <p class="score-big">{{ attempt['score'] }} / {{ attempt['total'] }}</p>
+  <p><strong>{{ pct }}%</strong> ·
+    {% if passed %}<span class="badge badge-pass">Passed</span>{% else %}<span class="badge badge-fail">Not passed yet (pass mark {{ quiz['pass_mark'] }}%)</span>{% endif %}</p>
+  <p class="muted">Handed in {{ attempt['finished_at']|dt }}</p>
+  {% if attempt['user_id'] == current_user['id'] %}
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('quizzes.quiz_start_page', quiz_id=quiz['id']) }}">Try again</a>
+    <a class="btn btn-secondary" href="{{ url_for('learning.course', course_id=course['id']) }}">Back to the course</a>
+  </div>
+  {% endif %}
+</section>
+
+<h2>Your answers</h2>
+{% for a in answers %}
+<section class="card question">
+  <p><strong>{{ loop.index }}. {{ a['question_text'] }}</strong></p>
+  {% if a['is_correct'] %}
+    <div class="choice correct">✓ {{ a['choice_text'] }} – correct</div>
+  {% else %}
+    <div class="choice wrong">✗ {{ a['choice_text'] or 'No answer given' }}</div>
+    <p>The correct answer is: <strong>{{ a['correct_text'] }}</strong></p>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

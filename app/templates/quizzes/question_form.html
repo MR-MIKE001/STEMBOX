@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Edit question{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([(course['title'], url_for('cms.course_detail', course_id=course['id'])), (quiz['title'], url_for('quizzes.quiz_edit', quiz_id=quiz['id'])), ("Edit question", None)]) }}
+<section class="card medium">
+  <h1>Edit question</h1>
+  {{ m.errors(errors) }}
+  <form method="post" class="form">
+    {{ m.csrf() }}
+    {% include "quizzes/_question_fields.html" %}
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Save question</button>
+      <a class="btn btn-secondary" href="{{ url_for('quizzes.quiz_edit', quiz_id=quiz['id']) }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

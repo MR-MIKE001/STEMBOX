@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ 'Edit lesson' if lesson else 'New lesson' }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), (course['title'], url_for('cms.course_detail', course_id=course['id'])),
+                  ((lesson['title'] if lesson else 'New lesson'), url_for('cms.lesson_detail', lesson_id=lesson['id']) if lesson else None)]
+                 + ([("Edit", None)] if lesson else [])) }}
+<section class="card medium">
+  <h1>{{ 'Edit lesson' if lesson else 'New lesson' }}</h1>
+  {{ m.errors(errors) }}
+  <form method="post" class="form" enctype="multipart/form-data" data-busy-text="Saving…">
+    {{ m.csrf() }}
+    <label for="title">Lesson title</label>
+    <input id="title" name="title" value="{{ form['title'] }}" required autofocus>
+
+    <label for="topic_id">Topic</label>
+    <select id="topic_id" name="topic_id">
+      <option value="">No topic</option>
+      {% for t in topics %}<option value="{{ t['id'] }}"{% if form['topic_id'] == t['id'] %} selected{% endif %}>{{ t['title'] }}</option>{% endfor %}
+    </select>
+    <label for="new_topic">…or type a new topic</label>
+    <input id="new_topic" name="new_topic" value="{{ form['new_topic'] }}" placeholder="Leave empty to use the topic above">
+
+    <label for="body">Lesson text</label>
+    <textarea id="body" name="body" class="tall">{{ form['body'] }}</textarea>
+    <details>
+      <summary>How to format the text</summary>
+      <ul class="hint">
+        <li>Start a line with <span class="code"># </span> for a big heading, <span class="code">## </span> for a small heading.</li>
+        <li>Start lines with <span class="code">- </span> for a bullet list, or <span class="code">1. </span> for a numbered list.</li>
+        <li>Put <span class="code">**two stars**</span> around words to make them <strong>bold</strong>, <span class="code">_underscores_</span> for <em>italic</em>.</li>
+        <li>Leave an empty line to start a new paragraph.</li>
+      </ul>
+    </details>
+
+    {% if accept %}
+    <label for="file">Add a file now (optional)</label>
+    <input id="file" name="file" type="file" accept="{{ accept }}">
+    <p id="file-info" class="hint">PDF, video, picture or audio. You can add more files after saving.</p>
+    {% endif %}
+
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Save lesson</button>
+      <a class="btn btn-secondary" href="{{ url_for('cms.lesson_detail', lesson_id=lesson['id']) if lesson else url_for('cms.course_detail', course_id=course['id']) }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

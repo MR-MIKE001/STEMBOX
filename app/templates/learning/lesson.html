@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% import "_resource.html" as res %}
+{% block title %}{{ lesson['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Subjects", url_for('learning.subjects')), (course['subject_name'], url_for('learning.subject', subject_id=course['subject_id'])),
+                  (course['title'], url_for('learning.course', course_id=course['id'])), (lesson['title'], None)]) }}
+<article class="card">
+  <h1>{{ lesson['title'] }}{% if lesson['status'] != 'published' %} {{ m.status_badge(lesson['status']) }}{% endif %}</h1>
+  {% if lesson['body'] %}<div class="lesson-body">{{ lesson['body']|lesson_text }}</div>{% endif %}
+  {% for r in resources %}
+    {{ res.show(r, save_url=url_for('learning.save_position', resource_id=r['id']) if current_user['role'] == 'student' else None,
+                start=positions.get(r['uuid'], 0)) }}
+  {% endfor %}
+</article>
+
+{% if quizzes %}
+<section class="card">
+  <h2>Check what you learned</h2>
+  {% for z in quizzes %}
+  <a class="btn btn-primary" href="{{ url_for('quizzes.quiz_start_page', quiz_id=z['id']) }}">Take the quiz: {{ z['title'] }}</a>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="card">
+  {% if current_user['role'] == 'student' %}
+    {% if progress and progress['completed_at'] %}
+      <p class="alert alert-success">You finished this lesson on {{ progress['completed_at']|date }}.</p>
+      <div class="actions">
+        {% if next_id %}<a class="btn btn-primary" href="{{ url_for('learning.lesson', lesson_id=next_id) }}">Next lesson →</a>{% endif %}
+        {{ m.post_button(url_for('learning.complete', lesson_id=lesson['id']), "Mark as not finished", "btn-secondary", fields={"done": "0"}) }}
+      </div>
+    {% else %}
+      <form method="post" action="{{ url_for('learning.complete', lesson_id=lesson['id']) }}">
+        {{ m.csrf() }}
+        <input type="hidden" name="done" value="1">
+        {% if next_id %}<input type="hidden" name="next_id" value="{{ next_id }}">{% endif %}
+        <button type="submit" class="btn btn-success btn-block">✓ I have finished this lesson{{ ' – go to the next one' if next_id else '' }}</button>
+      </form>
+    {% endif %}
+  {% endif %}
+  <div class="actions">
+    {% if prev_id %}<a class="btn btn-secondary" href="{{ url_for('learning.lesson', lesson_id=prev_id) }}">← Previous lesson</a>{% endif %}
+    <a class="btn btn-secondary" href="{{ url_for('learning.course', course_id=course['id']) }}">All lessons in this course</a>
+    {% if next_id and not (progress and progress['completed_at']) %}<a class="btn btn-secondary" href="{{ url_for('learning.lesson', lesson_id=next_id) }}">Next lesson →</a>{% endif %}
+  </div>
+</section>
+{% endblock %}

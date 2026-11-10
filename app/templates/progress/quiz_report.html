@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Results: {{ quiz['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([(course['title'], url_for('cms.course_detail', course_id=course['id'])), (quiz['title'], url_for('quizzes.quiz_edit', quiz_id=quiz['id'])), ("Results", None)]) }}
+<h1>Results: {{ quiz['title'] }}</h1>
+<div class="grid grid-4">
+  <div class="stat"><div class="stat-value">{{ stats.students }}</div><div class="stat-label">students took it</div></div>
+  <div class="stat"><div class="stat-value">{{ stats.attempts }}</div><div class="stat-label">attempts</div></div>
+  <div class="stat"><div class="stat-value">{{ stats.avg ~ '%' if stats.avg is not none else '–' }}</div><div class="stat-label">average score</div></div>
+  <div class="stat"><div class="stat-value">{{ stats.pass_rate ~ '%' if stats.pass_rate is not none else '–' }}</div><div class="stat-label">attempts passed ({{ quiz['pass_mark'] }}%)</div></div>
+</div>
+
+<section class="card">
+  <h2>Which questions were hard?</h2>
+  {% if questions %}
+  <div class="table-wrap">
+  <table class="stack">
+    <thead><tr><th>Question</th><th>Answered correctly</th></tr></thead>
+    <tbody>
+    {% for q in questions %}
+    <tr><td data-label="Question">{{ loop.index }}. {{ q['text'] }}</td>
+        <td data-label="Answered correctly">{{ q['correct'] }} of {{ q['answered'] }} {{ m.progress_bar(q['correct'], q['answered'], "Correct answers") }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">This quiz has no questions.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>All attempts</h2>
+  {% if attempts %}
+  <div class="table-wrap">
+  <table class="stack">
+    <thead><tr><th>Student</th><th>Score</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+    {% for a in attempts %}
+    <tr><td data-label="Student"><a href="{{ url_for('progress.student_detail', user_id=a['user_id']) }}">{{ a['student_name'] }}</a></td>
+        <td data-label="Score">{{ a['score'] }}/{{ a['total'] }} ({{ percent(a['score'], a['total']) }}%)</td>
+        <td data-label="Date">{{ a['finished_at']|dt }}</td>
+        <td><a class="btn btn-small btn-secondary" href="{{ url_for('quizzes.attempt', attempt_id=a['id']) }}">Answers</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">Nobody has taken this quiz yet.</p>{% endif %}
+</section>
+{% endblock %}

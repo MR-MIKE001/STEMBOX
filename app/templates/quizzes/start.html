@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ quiz['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Subjects", url_for('learning.subjects')), (course['title'], url_for('learning.course', course_id=course['id'])), (quiz['title'], None)]) }}
+<section class="card medium">
+  <h1>{{ quiz['title'] }}{% if quiz['status'] != 'published' %} {{ m.status_badge(quiz['status']) }}{% endif %}</h1>
+  {% if quiz['description'] %}<p>{{ quiz['description'] }}</p>{% endif %}
+  <p>{{ questions|length }} question{{ '' if questions|length == 1 else 's' }} · You pass with {{ quiz['pass_mark'] }}% or more.</p>
+
+  {% if staff_preview %}
+    <div class="alert alert-info">Teacher preview: the correct answers are marked. Students do not see them.
+      {% if can_manage %}<a href="{{ url_for('quizzes.quiz_edit', quiz_id=quiz['id']) }}">Edit this quiz</a>{% endif %}</div>
+    <ol>
+      {% for q in questions %}
+      <li><strong>{{ q['text'] }}</strong>
+        <ul>{% for c in q['choices'] %}<li>{{ c['text'] }}{% if c['is_correct'] %} <span class="badge badge-pass">Correct</span>{% endif %}</li>{% endfor %}</ul>
+      </li>
+      {% endfor %}
+    </ol>
+  {% elif questions %}
+    <form method="post" action="{{ url_for('quizzes.quiz_start', quiz_id=quiz['id']) }}">
+      {{ m.csrf() }}
+      <button type="submit" class="btn btn-primary btn-block">{{ 'Continue the quiz' if unfinished else ('Try again' if finished else 'Start the quiz') }}</button>
+    </form>
+  {% else %}
+    <p class="muted">This quiz has no questions yet.</p>
+  {% endif %}
+</section>
+
+{% if finished %}
+<section class="card medium">
+  <h2>Your earlier results</h2>
+  <ul class="list">
+    {% for a in finished %}
+    {% set pct = percent(a['score'], a['total']) %}
+    <li><span class="grow">{{ a['finished_at']|dt }}</span>
+      <span><strong>{{ a['score'] }}/{{ a['total'] }}</strong> ({{ pct }}%)
+        <span class="badge {{ 'badge-pass' if pct >= quiz['pass_mark'] else 'badge-fail' }}">{{ 'Passed' if pct >= quiz['pass_mark'] else 'Not yet' }}</span></span>
+      <a class="btn btn-small btn-secondary" href="{{ url_for('quizzes.attempt', attempt_id=a['id']) }}">See answers</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

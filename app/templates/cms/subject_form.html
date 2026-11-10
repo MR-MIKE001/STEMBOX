@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ 'Edit subject' if subject else 'New subject' }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), ("Subjects", url_for('cms.subject_list')), ('Edit' if subject else 'New subject', None)]) }}
+<section class="card narrow">
+  <h1>{{ 'Edit subject' if subject else 'New subject' }}</h1>
+  {{ m.errors(errors) }}
+  <form method="post" class="form">
+    {{ m.csrf() }}
+    <label for="name">Subject name</label>
+    <input id="name" name="name" value="{{ form['name'] }}" placeholder="Mathematics" required autofocus>
+    <label for="description">Short description (optional)</label>
+    <input id="description" name="description" value="{{ form['description'] }}">
+    <button class="btn btn-primary btn-block" type="submit">Save subject</button>
+  </form>
+</section>
+{% endblock %}

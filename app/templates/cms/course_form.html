@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ 'Edit course' if course else 'New course' }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), (course['title'] if course else 'New course', url_for('cms.course_detail', course_id=course['id']) if course else None)] + ([("Edit", None)] if course else [])) }}
+<section class="card medium">
+  <h1>{{ 'Edit course' if course else 'New course' }}</h1>
+  {% if not subjects %}
+    <div class="alert alert-warning">You need a subject first. <a href="{{ url_for('cms.subject_new', next='course') }}">Create a subject</a>.</div>
+  {% else %}
+  {{ m.errors(errors) }}
+  <form method="post" class="form">
+    {{ m.csrf() }}
+    <label for="subject_id">Subject</label>
+    <select id="subject_id" name="subject_id" required>
+      <option value="">Choose…</option>
+      {% for s in subjects %}<option value="{{ s['id'] }}"{% if form['subject_id'] == s['id'] %} selected{% endif %}>{{ s['name'] }}</option>{% endfor %}
+    </select>
+    <p class="hint"><a href="{{ url_for('cms.subject_new', next='course') }}">+ Add a new subject</a></p>
+
+    <label for="title">Course title</label>
+    <input id="title" name="title" value="{{ form['title'] }}" placeholder="Fractions and decimals" required>
+
+    <label for="level">Level or grade</label>
+    <input id="level" name="level" value="{{ form['level'] }}" list="levels" placeholder="Grade 7">
+    <datalist id="levels">{% for lv in levels %}<option value="{{ lv }}">{% endfor %}</datalist>
+
+    <label for="class_id">Who is it for?</label>
+    <select id="class_id" name="class_id">
+      <option value="">Every student (whole subject)</option>
+      {% for c in classes %}<option value="{{ c['id'] }}"{% if form['class_id'] == c['id'] %} selected{% endif %}>Only class {{ c['name'] }}</option>{% endfor %}
+    </select>
+    <p class="hint">A course for one class is only shown to that class's students.</p>
+
+    <label for="description">Description (optional)</label>
+    <textarea id="description" name="description">{{ form['description'] }}</textarea>
+
+    <button class="btn btn-primary" type="submit">{{ 'Save course' if course else 'Create course' }}</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

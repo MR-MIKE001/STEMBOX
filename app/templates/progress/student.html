@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ student['name'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Progress", url_for('progress.overview'))] + ([(classes[0]['name'], url_for('progress.class_report', class_id=classes[0]['id']))] if classes else []) + [(student['name'], None)]) }}
+<h1>{{ student['name'] }}</h1>
+<p class="muted">Username <span class="code">{{ student['username'] }}</span>{% if classes %} · {% for c in classes %}{{ c['name'] }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+  {% if student['last_login_at'] %} · last logged in {{ student['last_login_at']|dt }}{% endif %}</p>
+
+<section class="card">
+  <h2>Quiz attempts ({{ attempts|length }})</h2>
+  {% if attempts %}
+  <div class="table-wrap">
+  <table class="stack">
+    <thead><tr><th>Quiz</th><th>Score</th><th>Result</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+    {% for a in attempts %}
+    {% set pct = percent(a['score'], a['total']) %}
+    <tr><td data-label="Quiz">{{ a['quiz_title'] }}<br><small>{{ a['course_title'] }}</small></td>
+        <td data-label="Score">{{ a['score'] }}/{{ a['total'] }} ({{ pct }}%)</td>
+        <td data-label="Result"><span class="badge {{ 'badge-pass' if pct >= a['pass_mark'] else 'badge-fail' }}">{{ 'Passed' if pct >= a['pass_mark'] else 'Not passed' }}</span></td>
+        <td data-label="Date">{{ a['finished_at']|dt }}</td>
+        <td><a class="btn btn-small btn-secondary" href="{{ url_for('quizzes.attempt', attempt_id=a['id']) }}">Answers</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">No quizzes taken yet.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Lessons opened ({{ lessons|length }})</h2>
+  {% if lessons %}
+  <ul class="list">
+    {% for l in lessons %}
+    <li><span class="grow">{{ l['title'] }}<br><small>{{ l['course_title'] }} · last opened {{ l['last_viewed_at']|dt }}</small></span>
+      {% if l['completed_at'] %}<span class="badge badge-done">Finished {{ l['completed_at']|date }}</span>{% else %}<span class="badge">Started</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">No lessons opened yet.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ course['title'] }}{% endblock %}
+
+{% macro lesson_rows(items) %}
+<ul class="list">
+  {% for l in items %}
+  <li>
+    <span class="grow">
+      <a href="{{ url_for('cms.lesson_detail', lesson_id=l['id']) }}"><strong>{{ l['title'] }}</strong></a>
+      {{ m.status_badge(l['status']) }}<br>
+      <small>{{ l['resource_count'] }} file{{ '' if l['resource_count'] == 1 else 's' }} · changed {{ l['updated_at']|date }}</small>
+    </span>
+    <span class="actions">
+      {% if not loop.first %}{{ m.post_button(url_for('cms.lesson_move', lesson_id=l['id'], direction='up'), "↑ Up", "btn-small btn-secondary") }}{% endif %}
+      {% if not loop.last %}{{ m.post_button(url_for('cms.lesson_move', lesson_id=l['id'], direction='down'), "↓ Down", "btn-small btn-secondary") }}{% endif %}
+      <a class="btn btn-small btn-secondary" href="{{ url_for('cms.lesson_edit', lesson_id=l['id']) }}">Edit</a>
+    </span>
+  </li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), (course['subject_name'], url_for('cms.content_home', subject=course['subject_id'])), (course['title'], None)]) }}
+<div class="page-head">
+  <div>
+    <h1>{{ course['title'] }} {% if course['is_sample'] %}<span class="badge badge-sample">Sample</span>{% endif %}</h1>
+    <p class="muted">{{ course['subject_name'] }}{% if course['level'] %} · {{ course['level'] }}{% endif %} ·
+      {{ ('Only class ' ~ course['class_name']) if course['class_name'] else 'Every student (whole subject)' }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('cms.lesson_new', course_id=course['id']) }}">+ New lesson</a>
+    <a class="btn btn-secondary" href="{{ url_for('quizzes.quiz_new', course_id=course['id']) }}">+ New quiz</a>
+    <a class="btn btn-secondary" href="{{ url_for('learning.course', course_id=course['id']) }}">See as a student</a>
+    <a class="btn btn-secondary" href="{{ url_for('cms.course_edit', course_id=course['id']) }}">Edit course</a>
+  </div>
+</div>
+{% if course['description'] %}<p>{{ course['description'] }}</p>{% endif %}
+<p class="alert {{ 'alert-success' if direct else 'alert-info' }}">
+  {% if direct %}You can publish lessons and quizzes in this course straight away.
+  {% else %}Lessons and quizzes you publish in this course need an administrator's approval first.{% endif %}
+</p>
+
+<div class="two-col">
+  <div>
+    {% for t in topics %}
+    <section class="card">
+      <div class="page-head">
+        <h2>{{ t['title'] }}</h2>
+        <div class="actions">
+          <a class="btn btn-small btn-secondary" href="{{ url_for('cms.lesson_new', course_id=course['id'], topic=t['id']) }}">+ Lesson here</a>
+          {% if not loop.first %}{{ m.post_button(url_for('cms.topic_move', topic_id=t['id'], direction='up'), "↑", "btn-small btn-secondary") }}{% endif %}
+          {% if not loop.last %}{{ m.post_button(url_for('cms.topic_move', topic_id=t['id'], direction='down'), "↓", "btn-small btn-secondary") }}{% endif %}
+        </div>
+      </div>
+      {% if by_topic[t['id']] %}{{ lesson_rows(by_topic[t['id']]) }}{% else %}<p class="muted">No lessons in this topic yet.</p>{% endif %}
+      <details>
+        <summary>Rename or remove this topic</summary>
+        <form method="post" action="{{ url_for('cms.topic_rename', topic_id=t['id']) }}" class="form">
+          {{ m.csrf() }}
+          <label for="topic-{{ t['id'] }}">Topic name</label>
+          <input id="topic-{{ t['id'] }}" name="title" value="{{ t['title'] }}" required>
+          <button class="btn btn-secondary" type="submit">Rename</button>
+        </form>
+        {{ m.post_button(url_for('cms.topic_delete', topic_id=t['id']), "Remove topic (keep its lessons)", "btn-danger",
+                         confirm="Remove this topic? Its lessons are kept.") }}
+      </details>
+    </section>
+    {% endfor %}
+
+    {% if loose or not topics %}
+    <section class="card">
+      <h2>{{ 'Other lessons' if topics else 'Lessons' }}</h2>
+      {% if loose %}{{ lesson_rows(loose) }}
+      {% else %}{{ m.empty("This course has no lessons yet.", url_for('cms.lesson_new', course_id=course['id']), "+ New lesson") }}{% endif %}
+    </section>
+    {% endif %}
+  </div>
+
+  <div>
+    <section class="card">
+      <h2>Quizzes</h2>
+      {% if quizzes %}
+      <ul class="list">
+        {% for z in quizzes %}
+        <li><span class="grow"><a href="{{ url_for('quizzes.quiz_edit', quiz_id=z['id']) }}"><strong>{{ z['title'] }}</strong></a>
+          {{ m.status_badge(z['status']) }}<br><small>{{ z['question_count'] }} question{{ '' if z['question_count'] == 1 else 's' }}</small></span></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">No quizzes yet.</p>{% endif %}
+      <a class="btn btn-secondary btn-block" href="{{ url_for('quizzes.quiz_new', course_id=course['id']) }}">+ New quiz</a>
+    </section>
+
+    <section class="card">
+      <h2>Add a topic</h2>
+      <p class="hint">Topics group lessons, for example “Adding fractions”.</p>
+      <form method="post" action="{{ url_for('cms.topic_add', course_id=course['id']) }}" class="form">
+        {{ m.csrf() }}
+        <label for="new-topic">Topic name</label>
+        <input id="new-topic" name="title" required>
+        <button class="btn btn-secondary" type="submit">Add topic</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Delete course</h2>
+      <p class="hint">Deletes every lesson, file and quiz in this course, and students' results for them.</p>
+      {{ m.post_button(url_for('cms.course_delete', course_id=course['id']), "Delete this course", "btn-danger",
+                       confirm="Delete the whole course with all lessons, files and quizzes? This cannot be undone.") }}
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Import users{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Users", url_for('users.user_list')), ("Import from CSV", None)]) }}
+<section class="card medium">
+  <h1>Import people from a CSV file</h1>
+  <p>Make a spreadsheet with these columns, then save it as <strong>CSV</strong>:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>name</th><th>username</th><th>role</th><th>password</th><th>class</th></tr></thead>
+      <tbody><tr><td>Amina Okafor</td><td>amina.o</td><td>student</td><td><em>(optional)</em></td><td>Grade 7A <em>(optional)</em></td></tr></tbody>
+    </table>
+  </div>
+  <ul>
+    <li><strong>role</strong> is <span class="code">student</span>, <span class="code">teacher</span> or <span class="code">admin</span>.</li>
+    <li>If <strong>password</strong> is empty, STEMBox makes one. Everyone must choose their own password at first login.</li>
+    <li><strong>class</strong> must already exist. People with a username that already exists are skipped.</li>
+  </ul>
+  <p><a class="btn btn-secondary" href="{{ url_for('users.user_import_template') }}">Download a template</a></p>
+
+  <form method="post" enctype="multipart/form-data" class="form" data-busy-text="Importing…">
+    {{ m.csrf() }}
+    <label for="file">CSV file</label>
+    <input id="file" name="file" type="file" accept=".csv,text/csv">
+    <p id="file-info" class="hint"></p>
+    <label for="text">…or paste the list here</label>
+    <textarea id="text" name="text" placeholder="name,username,role,password,class"></textarea>
+    <button type="submit" class="btn btn-primary">Import</button>
+  </form>
+</section>
+{% endblock %}

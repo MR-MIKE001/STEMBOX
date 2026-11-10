@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Users</h1>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('users.user_new') }}">+ Add a person</a>
+    <a class="btn btn-secondary" href="{{ url_for('users.user_import') }}">Import from a CSV file</a>
+  </div>
+</div>
+
+<form method="get" class="card filters" role="search">
+  <div>
+    <label for="q">Search name or username</label>
+    <input id="q" name="q" type="search" value="{{ q }}">
+  </div>
+  <div>
+    <label for="role">Role</label>
+    <select id="role" name="role" data-autosubmit>
+      <option value="">Everyone</option>
+      {% for key, label in ROLE_LABELS.items() %}
+      <option value="{{ key }}"{% if role == key %} selected{% endif %}>{{ label }}s</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="status">Status</label>
+    <select id="status" name="status" data-autosubmit>
+      <option value="">Any</option>
+      <option value="active"{% if status == 'active' %} selected{% endif %}>Can log in</option>
+      <option value="inactive"{% if status == 'inactive' %} selected{% endif %}>Switched off</option>
+    </select>
+  </div>
+  <button class="btn btn-secondary" type="submit">Search</button>
+</form>
+
+{% if users %}
+<div class="table-wrap">
+<table class="stack">
+  <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Classes</th><th>Status</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for u in users %}
+  <tr>
+    <td data-label="Name"><strong>{{ u['name'] }}</strong>{% if u['is_sample'] %} <span class="badge badge-sample">Sample</span>{% endif %}</td>
+    <td data-label="Username"><span class="code">{{ u['username'] }}</span></td>
+    <td data-label="Role"><span class="badge badge-role">{{ ROLE_LABELS[u['role']] }}</span></td>
+    <td data-label="Classes">{{ u['class_names'] or '–' }}</td>
+    <td data-label="Status">
+      {% if u['active'] %}<span class="badge badge-published">Can log in</span>{% else %}<span class="badge badge-inactive">Switched off</span>{% endif %}
+      {% if u['must_change_password'] %}<br><small>Must choose a new password</small>{% endif %}
+    </td>
+    <td data-label="Actions">
+      <div class="actions">
+        <a class="btn btn-small btn-secondary" href="{{ url_for('users.user_edit', user_id=u['id']) }}">Edit</a>
+        <a class="btn btn-small btn-secondary" href="{{ url_for('users.user_reset_password', user_id=u['id']) }}">Reset password</a>
+        {% if u['id'] != current_user['id'] %}
+        <form method="post" action="{{ url_for('users.user_toggle_active', user_id=u['id']) }}" class="inline-form"
+              {% if u['active'] %}data-confirm="Switch off {{ u['name'] }}? They will not be able to log in."{% endif %}>
+          {{ m.csrf() }}
+          <button class="btn btn-small {{ 'btn-danger' if u['active'] else 'btn-success' }}" type="submit">
+            {{ 'Switch off' if u['active'] else 'Switch on' }}</button>
+        </form>
+        {% endif %}
+      </div>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+{{ m.empty("No people match this search.", url_for('users.user_new'), "+ Add a person") }}
+{% endif %}
+{% endblock %}

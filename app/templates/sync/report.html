@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Import report{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Copy content", url_for('sync.home')), ("Report", None)]) }}
+{% if report %}
+<h1>Content loaded</h1>
+<p class="muted">From {{ source }} · package {{ report.package_uuid }}{% if report.source %} · made on {{ report.source }}{% endif %}</p>
+<div class="grid grid-4">
+  <div class="stat"><div class="stat-value">{{ report.added|length }}</div><div class="stat-label">added</div></div>
+  <div class="stat"><div class="stat-value">{{ report.updated|length }}</div><div class="stat-label">updated</div></div>
+  <div class="stat"><div class="stat-value">{{ report.skipped|length }}</div><div class="stat-label">skipped (already here)</div></div>
+  <div class="stat"><div class="stat-value">{{ report.rejected|length }}</div><div class="stat-label">rejected</div></div>
+</div>
+{% for key, label in (("rejected", "Rejected"), ("added", "Added"), ("updated", "Updated"), ("skipped", "Skipped")) %}
+  {% if report[key] %}
+  <section class="card">
+    <h2>{{ label }} ({{ report[key]|length }})</h2>
+    <ul class="list">
+      {% for item in report[key] %}
+      <li><span class="grow"><strong>{{ item.title }}</strong> <small>({{ item.type }})</small></span>{% if item.why %}<small>{{ item.why }}</small>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+{% endfor %}
+<a class="btn btn-primary" href="{{ url_for('cms.content_home') }}">See the content</a>
+{% else %}
+<h1>Package rejected</h1>
+<div class="alert alert-error">
+  <p><strong>Nothing was changed.</strong> The package from {{ source }} did not pass the safety checks:</p>
+  <ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul>
+</div>
+<a class="btn btn-primary" href="{{ url_for('sync.home') }}">Back</a>
+{% endif %}
+{% endblock %}

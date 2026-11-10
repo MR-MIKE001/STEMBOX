@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Classes{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Classes</h1>
+  <a class="btn btn-primary" href="{{ url_for('users.class_new') }}">+ New class</a>
+</div>
+{% if classes %}
+<div class="grid grid-3">
+  {% for c in classes %}
+  <a class="tile" href="{{ url_for('users.class_detail', class_id=c['id']) }}">
+    <h3>{{ c['name'] }}</h3>
+    <p>{{ c['level'] or 'No level set' }}</p>
+    <div class="meta">{{ c['students'] }} student{{ '' if c['students'] == 1 else 's' }} · Teacher: {{ c['teachers'] or 'none yet' }}</div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+{{ m.empty("There are no classes yet. A class groups students with their teachers.", url_for('users.class_new'), "+ New class") }}
+{% endif %}
+{% endblock %}

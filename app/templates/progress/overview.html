@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Progress{% endblock %}
+{% block content %}
+<h1>Student progress</h1>
+{% if summaries %}
+<div class="grid grid-2">
+  {% for c, s in summaries %}
+  <a class="tile" href="{{ url_for('progress.class_report', class_id=c['id']) }}">
+    <h3>{{ c['name'] }}</h3>
+    <p>{{ s.student_count }} student{{ '' if s.student_count == 1 else 's' }} · {{ s.lesson_count }} lessons · {{ s.quiz_count }} quizzes</p>
+    <div class="meta">
+      Lessons finished: {{ m.progress_bar(s.completion_rate, 100, "Lessons finished") }}
+      Average quiz score: <strong>{{ s.avg_score ~ '%' if s.avg_score is not none else 'no quizzes taken yet' }}</strong>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+  {% if current_user['role'] == 'admin' %}
+  {{ m.empty("There are no classes yet. Create classes and add students to see their progress.", url_for('users.class_new'), "+ New class") }}
+  {% else %}
+  {{ m.empty("You are not the teacher of any class yet. Ask the administrator to add you to your classes.") }}
+  {% endif %}
+{% endif %}
+{% endblock %}

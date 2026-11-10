@@ -1,0 +1,8 @@
+# Runtime (all pure Python except MarkupSafe, which has a fallback; works on Raspberry Pi OS)
+Flask>=3.0,<4
+Flask-WTF>=1.2,<2          # CSRF protection only
+python-dotenv>=1.0         # reads .env / .flaskenv
+waitress>=3.0              # production web server used by run.py
+
+# Development / testing
+pytest>=8

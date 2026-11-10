@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ subject['name'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Subjects", url_for('learning.subjects')), (subject['name'], None)]) }}
+<h1>{{ subject['name'] }}</h1>
+{% if subject['description'] %}<p class="muted">{{ subject['description'] }}</p>{% endif %}
+{% if courses %}
+<div class="grid grid-3">
+  {% for c in courses %}
+  <a class="tile" href="{{ url_for('learning.course', course_id=c['id']) }}">
+    <h3>{{ c['title'] }}</h3>
+    <p>{% if c['level'] %}{{ c['level'] }} · {% endif %}{{ c['lesson_count'] }} lesson{{ '' if c['lesson_count'] == 1 else 's' }}{% if c['quiz_count'] %} · {{ c['quiz_count'] }} quiz{{ 'zes' if c['quiz_count'] != 1 else '' }}{% endif %}</p>
+    {% if c['id'] in done %}
+    <div class="meta">{{ m.progress_bar(done[c['id']], c['lesson_count'], "Lessons finished") }}</div>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+{{ m.empty("No courses are available in this subject yet.") }}
+{% endif %}
+{% endblock %}

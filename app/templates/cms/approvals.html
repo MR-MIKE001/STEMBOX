@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Waiting for approval ({{ pending|length }})</h1>
+  <a class="btn btn-secondary" href="{{ url_for('users.settings') }}">Change publishing mode</a>
+</div>
+<p class="muted">Current mode:
+  {% if publish_mode == 'direct' %}teachers publish directly{% elif publish_mode == 'mixed' %}mixed (class content direct, whole-subject content needs approval){% else %}administrator approval{% endif %}.</p>
+
+{% if pending %}
+  {% for r in pending %}
+  <section class="card">
+    <h2>{{ r['title'] }} <small class="muted">· {{ 'Lesson' if r['target_type'] == 'lesson' else 'Quiz' }}</small></h2>
+    <p>Course: <strong>{{ r['course_title'] }}</strong> · {{ ('Class ' ~ r['class_name']) if r['class_name'] else 'Whole subject' }}<br>
+       Sent by {{ r['requester'] or 'unknown' }} on {{ r['created_at']|dt }}
+       {% if r['note'] %}<br><em>{{ r['note'] }}</em>{% endif %}</p>
+    <div class="actions">
+      {% if r['target_type'] == 'lesson' %}
+      <a class="btn btn-secondary" href="{{ url_for('learning.lesson', lesson_id=r['target_id']) }}">Look at it</a>
+      {% else %}
+      <a class="btn btn-secondary" href="{{ url_for('quizzes.quiz_edit', quiz_id=r['target_id']) }}">Look at it</a>
+      {% endif %}
+      {{ m.post_button(url_for('cms.approval_approve', request_id=r['id']), "Approve and publish", "btn-success") }}
+    </div>
+    <details>
+      <summary>Send back to the teacher</summary>
+      <form method="post" action="{{ url_for('cms.approval_reject', request_id=r['id']) }}" class="form">
+        {{ m.csrf() }}
+        <label for="note-{{ r['id'] }}">What should the teacher change? (optional)</label>
+        <textarea id="note-{{ r['id'] }}" name="note" maxlength="500"></textarea>
+        <button class="btn btn-danger" type="submit">Send back</button>
+      </form>
+    </details>
+  </section>
+  {% endfor %}
+{% else %}
+  {{ m.empty("Nothing is waiting. All caught up!") }}
+{% endif %}
+
+{% if history %}
+<h2>Recently reviewed</h2>
+<div class="table-wrap">
+<table class="stack">
+  <thead><tr><th>Item</th><th>Decision</th><th>By</th><th>When</th></tr></thead>
+  <tbody>
+  {% for r in history %}
+  <tr><td data-label="Item">{{ r['title'] }} <small>({{ r['target_type'] }})</small></td>
+      <td data-label="Decision"><span class="badge badge-{{ r['status'] }}">{{ r['status']|capitalize }}</span>{% if r['note'] and r['status'] == 'rejected' %} – {{ r['note'] }}{% endif %}</td>
+      <td data-label="By">{{ r['reviewer'] or '' }}</td><td data-label="When">{{ r['reviewed_at']|dt }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

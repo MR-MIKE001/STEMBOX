@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Quizzes{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Quizzes</h1>
+</div>
+{% if courses %}
+<form method="get" action="{{ url_for('quizzes.quiz_new_pick') }}" class="card filters" id="new-quiz">
+  <div>
+    <label for="course">Make a new quiz in course</label>
+    <select id="course" name="course">
+      {% for c in courses %}<option value="{{ c['id'] }}">{{ c['subject_name'] }} › {{ c['title'] }}</option>{% endfor %}
+    </select>
+  </div>
+  <button class="btn btn-primary" type="submit">+ New quiz</button>
+</form>
+{% endif %}
+
+{% if quizzes %}
+<div class="table-wrap">
+<table class="stack">
+  <thead><tr><th>Quiz</th><th>Course</th><th>Questions</th><th>Attempts</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for z in quizzes %}
+  <tr>
+    <td data-label="Quiz"><a href="{{ url_for('quizzes.quiz_edit', quiz_id=z['id']) }}"><strong>{{ z['title'] }}</strong></a></td>
+    <td data-label="Course">{{ z['subject_name'] }} › {{ z['course_title'] }}</td>
+    <td data-label="Questions" class="num">{{ z['question_count'] }}</td>
+    <td data-label="Attempts" class="num">{{ z['attempt_count'] }}</td>
+    <td data-label="Status">{{ m.status_badge(z['status']) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% elif courses %}
+{{ m.empty("No quizzes yet. Choose a course above and press “+ New quiz”.") }}
+{% else %}
+{{ m.empty("Create a course first, then add quizzes to it.", url_for('cms.course_new'), "+ New course") }}
+{% endif %}
+{% endblock %}

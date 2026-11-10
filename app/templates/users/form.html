@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ 'Edit ' ~ user['name'] if user else 'Add a person' }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Users", url_for('users.user_list')), (user['name'] if user else "Add a person", None)]) }}
+<section class="card medium">
+  <h1>{{ 'Edit ' ~ user['name'] if user else 'Add a person' }}</h1>
+  {{ m.errors(errors) }}
+  <form method="post" class="form">
+    {{ m.csrf() }}
+    <label for="name">Full name</label>
+    <input id="name" name="name" value="{{ form['name'] }}" required autofocus>
+
+    <label for="username">Username</label>
+    <input id="username" name="username" value="{{ form['username'] }}" autocapitalize="none" required>
+    <p class="hint">Used to log in. Lowercase letters, numbers, dots or dashes. Example: maria.k</p>
+
+    <label for="role">Role</label>
+    <select id="role" name="role">
+      {% for key, label in ROLE_LABELS.items() %}
+      <option value="{{ key }}"{% if form['role'] == key %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <p class="hint">Students learn. Teachers create lessons and quizzes. Administrators manage the whole STEMBox.</p>
+
+    {% if user %}
+      <label class="check"><input type="checkbox" name="active" value="1"{% if form['active'] %} checked{% endif %}> This person can log in</label>
+      {% if member_of %}
+      <p class="hint">Member of: {% for c in member_of %}<a href="{{ url_for('users.class_detail', class_id=c['id']) }}">{{ c['name'] }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+    {% else %}
+      <label for="password">Starting password (optional)</label>
+      <input id="password" name="password" type="text" autocomplete="off">
+      <p class="hint">Leave empty and STEMBox will make one for you. The person must choose their own password at first login.</p>
+      {% if classes %}
+      <label for="class_id">Add to class (optional)</label>
+      <select id="class_id" name="class_id">
+        <option value="">No class</option>
+        {% for c in classes %}<option value="{{ c['id'] }}">{{ c['name'] }}</option>{% endfor %}
+      </select>
+      {% endif %}
+    {% endif %}
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">{{ 'Save changes' if user else 'Create account' }}</button>
+      {% if not user %}<button type="submit" name="again" value="1" class="btn btn-secondary">Create and add another</button>{% endif %}
+      <a class="btn btn-secondary" href="{{ url_for('users.user_list') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ 'Quiz settings' if quiz else 'New quiz' }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), (course['title'], url_for('cms.course_detail', course_id=course['id']))]
+                 + ([(quiz['title'], url_for('quizzes.quiz_edit', quiz_id=quiz['id'])), ("Settings", None)] if quiz else [("New quiz", None)])) }}
+<section class="card medium">
+  <h1>{{ 'Quiz settings' if quiz else 'New quiz' }}</h1>
+  {{ m.errors(errors) }}
+  <form method="post" class="form">
+    {{ m.csrf() }}
+    <label for="title">Quiz title</label>
+    <input id="title" name="title" value="{{ form['title'] }}" required autofocus>
+    <label for="description">Instructions for students (optional)</label>
+    <textarea id="description" name="description">{{ form['description'] }}</textarea>
+    <label for="pass_mark">Pass mark (%)</label>
+    <input id="pass_mark" name="pass_mark" type="number" min="0" max="100" value="{{ form['pass_mark'] }}" required>
+    <label for="lesson_id">Show it at the end of a lesson (optional)</label>
+    <select id="lesson_id" name="lesson_id">
+      <option value="">No – only on the course page</option>
+      {% for l in lessons %}<option value="{{ l['id'] }}"{% if form['lesson_id'] == l['id'] %} selected{% endif %}>{{ l['title'] }}</option>{% endfor %}
+    </select>
+    <button class="btn btn-primary" type="submit">{{ 'Save' if quiz else 'Create quiz and add questions' }}</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ quiz['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), (course['title'], url_for('cms.course_detail', course_id=course['id'])), (quiz['title'], None)]) }}
+<div class="page-head">
+  <div>
+    <h1>{{ quiz['title'] }}</h1>
+    <p>{{ m.status_badge(quiz['status']) }} · Pass mark {{ quiz['pass_mark'] }}% · {{ questions|length }} question{{ '' if questions|length == 1 else 's' }}
+      {% if lesson %}· shown after “{{ lesson['title'] }}”{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('quizzes.quiz_settings', quiz_id=quiz['id']) }}">Settings</a>
+    <a class="btn btn-secondary" href="{{ url_for('quizzes.quiz_start_page', quiz_id=quiz['id']) }}">Preview</a>
+    <a class="btn btn-secondary" href="{{ url_for('progress.quiz_report', quiz_id=quiz['id']) }}">Results ({{ attempts }})</a>
+  </div>
+</div>
+
+<section class="card">
+  <h2>Publishing</h2>
+  {% if quiz['status'] == 'published' %}
+    <p>Students can take this quiz.</p>
+    {{ m.post_button(url_for('quizzes.quiz_unpublish', quiz_id=quiz['id']), "Hide from students (back to draft)", "btn-secondary") }}
+  {% elif quiz['status'] == 'pending' %}
+    <p>Waiting for an administrator to approve it.</p>
+    {{ m.post_button(url_for('quizzes.quiz_unpublish', quiz_id=quiz['id']), "Cancel the request", "btn-secondary") }}
+  {% else %}
+    {% if review and review['status'] == 'rejected' %}
+      <div class="alert alert-warning">An administrator sent this quiz back.{% if review['note'] %}<br><strong>Note:</strong> {{ review['note'] }}{% endif %}</div>
+    {% endif %}
+    {% if problems %}
+      <div class="alert alert-info"><strong>Before you can publish:</strong><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>
+    {% else %}
+      {{ m.post_button(url_for('quizzes.quiz_publish', quiz_id=quiz['id']), "Publish now" if direct else "Ask for approval to publish", "btn-success") }}
+    {% endif %}
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Questions</h2>
+  {% if attempts %}<p class="alert alert-info">{{ attempts }} attempt(s) were already made. Students' old results stay as they were if you change questions.</p>{% endif %}
+  {% if questions %}
+  <ol class="list">
+    {% for q in questions %}
+    <li>
+      <div class="grow">
+        <strong>{{ loop.index }}. {{ q['text'] }}</strong>
+        <ul>
+          {% for c in q['choices'] %}<li>{{ c['text'] }}{% if c['is_correct'] %} <span class="badge badge-pass">Correct</span>{% endif %}</li>{% endfor %}
+        </ul>
+      </div>
+      <span class="actions">
+        {% if not loop.first %}{{ m.post_button(url_for('quizzes.question_move', question_id=q['id'], direction='up'), "↑", "btn-small btn-secondary") }}{% endif %}
+        {% if not loop.last %}{{ m.post_button(url_for('quizzes.question_move', question_id=q['id'], direction='down'), "↓", "btn-small btn-secondary") }}{% endif %}
+        <a class="btn btn-small btn-secondary" href="{{ url_for('quizzes.question_edit', question_id=q['id']) }}">Edit</a>
+        {{ m.post_button(url_for('quizzes.question_delete', question_id=q['id']), "Remove", "btn-small btn-danger", confirm="Remove this question?") }}
+      </span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="muted">No questions yet. Add the first one below.</p>{% endif %}
+</section>
+
+<section class="card medium" id="add-question">
+  <h2>Add a question</h2>
+  {{ m.errors(form_errors) }}
+  <form method="post" action="{{ url_for('quizzes.question_add', quiz_id=quiz['id']) }}#add-question" class="form">
+    {{ m.csrf() }}
+    {% with form = blank %}{% include "quizzes/_question_fields.html" %}{% endwith %}
+    <button class="btn btn-primary" type="submit">Add question</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Delete quiz</h2>
+  {{ m.post_button(url_for('quizzes.quiz_delete', quiz_id=quiz['id']), "Delete this quiz", "btn-danger",
+                   confirm="Delete this quiz and all students' results for it?") }}
+</section>
+{% endblock %}

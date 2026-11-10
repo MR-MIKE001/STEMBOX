@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Subjects{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Subjects</h1>
+  <form method="get" action="{{ url_for('learning.search') }}" class="actions" role="search">
+    <label for="q" class="sr-only">Search lessons</label>
+    <input id="q" name="q" type="search" placeholder="Search lessons">
+    <button class="btn btn-secondary" type="submit">Search</button>
+  </form>
+</div>
+{% if subjects %}
+<div class="grid grid-3">
+  {% for s in subjects %}
+  <a class="tile" href="{{ url_for('learning.subject', subject_id=s.id) }}">
+    <h3>{{ s.name }}</h3>
+    <p>{{ s.courses }} course{{ '' if s.courses == 1 else 's' }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+{{ m.empty("There are no lessons for you yet. Your teacher will add them soon.") }}
+{% endif %}
+{% endblock %}

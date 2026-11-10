@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Content{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ 'All content' if current_user['role'] == 'admin' else 'My content' }}</h1>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('cms.course_new') }}">+ New course</a>
+    <a class="btn btn-secondary" href="{{ url_for('cms.subject_list') }}">Subjects</a>
+  </div>
+</div>
+
+{% if current_user['role'] == 'teacher' %}
+<p class="alert alert-info">
+  {% if publish_mode == 'direct' %}Your lessons and quizzes appear to students as soon as you press <strong>Publish</strong>.
+  {% elif publish_mode == 'mixed' %}You can publish straight away to a class you teach. Content for a whole subject waits for an administrator's approval.
+  {% else %}When you press <strong>Publish</strong>, an administrator checks your lesson or quiz before students can see it.{% endif %}
+</p>
+{% endif %}
+
+<form method="get" class="card filters" role="search">
+  <div>
+    <label for="q">Search</label>
+    <input id="q" name="q" type="search" value="{{ f.q }}" placeholder="Words in a title or lesson">
+  </div>
+  <div>
+    <label for="subject">Subject</label>
+    <select id="subject" name="subject" data-autosubmit>
+      <option value="">All subjects</option>
+      {% for s in subjects %}<option value="{{ s['id'] }}"{% if f.subject == s['id'] %} selected{% endif %}>{{ s['name'] }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="class">Class</label>
+    <select id="class" name="class" data-autosubmit>
+      <option value="">All</option>
+      <option value="none"{% if f['class'] == 'none' %} selected{% endif %}>Whole subject (no class)</option>
+      {% for c in classes %}<option value="{{ c['id'] }}"{% if f['class'] == c['id']|string %} selected{% endif %}>{{ c['name'] }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="level">Level</label>
+    <select id="level" name="level" data-autosubmit>
+      <option value="">All levels</option>
+      {% for lv in levels %}<option{% if f.level == lv %} selected{% endif %}>{{ lv }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="topic">Topic</label>
+    <input id="topic" name="topic" value="{{ f.topic }}" placeholder="Topic name">
+  </div>
+  <div>
+    <label for="status">Lesson status</label>
+    <select id="status" name="status" data-autosubmit>
+      <option value="">Any</option>
+      {% for key, label in STATUS_LABELS.items() %}<option value="{{ key }}"{% if f.status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <button class="btn btn-secondary" type="submit">Search</button>
+</form>
+
+{% if searching %}
+<section class="card">
+  <h2>Lessons found ({{ lessons|length }})</h2>
+  {% if lessons %}
+  <div class="table-wrap">
+  <table class="stack">
+    <thead><tr><th>Lesson</th><th>Course</th><th>Topic</th><th>Status</th><th>Changed</th></tr></thead>
+    <tbody>
+    {% for l in lessons %}
+    <tr>
+      <td data-label="Lesson"><a href="{{ url_for('cms.lesson_detail', lesson_id=l['id']) }}"><strong>{{ l['title'] }}</strong></a></td>
+      <td data-label="Course">{{ l['subject_name'] }} › {{ l['course_title'] }}</td>
+      <td data-label="Topic">{{ l['topic_title'] or '–' }}</td>
+      <td data-label="Status">{{ m.status_badge(l['status']) }}</td>
+      <td data-label="Changed">{{ l['updated_at']|date }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">No lessons match.</p>{% endif %}
+</section>
+{% endif %}
+
+<h2>Courses ({{ courses|length }})</h2>
+{% if courses %}
+<div class="grid grid-3">
+  {% for c in courses %}
+  <a class="tile" href="{{ url_for('cms.course_detail', course_id=c['id']) }}">
+    <h3>{{ c['title'] }}</h3>
+    <p>{{ c['subject_name'] }}{% if c['level'] %} · {{ c['level'] }}{% endif %}</p>
+    <div class="meta">
+      {{ c['class_name'] or 'Whole subject' }} ·
+      {{ c['published_count'] }}/{{ c['lesson_count'] }} lessons published · {{ c['quiz_count'] }} quiz{{ 'zes' if c['quiz_count'] != 1 else '' }}
+      {% if c['is_sample'] %}<span class="badge badge-sample">Sample</span>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+  {% if subjects %}
+  {{ m.empty("No courses here yet.", url_for('cms.course_new'), "+ Create a course") }}
+  {% else %}
+  {{ m.empty("Start by creating a subject, for example “Mathematics”.", url_for('cms.subject_new', next='course'), "+ Create a subject") }}
+  {% endif %}
+{% endif %}
+{% endblock %}

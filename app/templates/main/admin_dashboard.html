@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Administrator{% endblock %}
+{% block content %}
+<h1>Administrator dashboard</h1>
+
+<section class="card">
+  <h2>Connect other devices</h2>
+  <p>Phones, tablets and computers on the same Wi-Fi can open STEMBox by typing this address into their web browser:</p>
+  {% if addresses %}
+    {% for a in addresses %}<p class="address code">{{ a }}</p>{% endfor %}
+  {% else %}
+    <p class="alert alert-warning">This STEMBox is not connected to a network yet. Connect it to the Wi-Fi (or start its hotspot), then reload this page.</p>
+  {% endif %}
+  <p class="hint">If the first address does not work, try the next one. You are using: <span class="code">{{ current_url }}</span>. No internet connection is needed.</p>
+</section>
+
+{% if stats.pending %}
+<div class="alert alert-warning"><strong>{{ stats.pending }}</strong> lesson(s) or quiz(zes) wait for your approval.
+  <a class="btn btn-small btn-primary" href="{{ url_for('cms.approvals') }}">Review now</a></div>
+{% endif %}
+{% if stats.sample %}
+<div class="alert alert-info">Sample (placeholder) content is loaded. Remove it before real use with <span class="code">flask unseed-dev</span>.</div>
+{% endif %}
+
+<div class="grid grid-4">
+  <a class="tile" href="{{ url_for('users.user_list', role='student') }}"><div class="stat-value">{{ stats.students }}</div><p>students</p></a>
+  <a class="tile" href="{{ url_for('users.user_list', role='teacher') }}"><div class="stat-value">{{ stats.teachers }}</div><p>teachers</p></a>
+  <a class="tile" href="{{ url_for('users.class_list') }}"><div class="stat-value">{{ stats.classes }}</div><p>classes</p></a>
+  <a class="tile" href="{{ url_for('cms.content_home') }}"><div class="stat-value">{{ stats.courses }}</div><p>courses</p></a>
+  <a class="tile" href="{{ url_for('cms.content_home', status='published') }}"><div class="stat-value">{{ stats.lessons }}</div><p>published lessons</p></a>
+  <a class="tile" href="{{ url_for('quizzes.quiz_list') }}"><div class="stat-value">{{ stats.quizzes }}</div><p>published quizzes</p></a>
+  <a class="tile" href="{{ url_for('progress.overview') }}"><div class="stat-value">{{ stats.attempts }}</div><p>quiz attempts</p></a>
+  <a class="tile" href="{{ url_for('cms.approvals') }}"><div class="stat-value">{{ stats.pending }}</div><p>waiting for approval</p></a>
+</div>
+
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Quick actions</h2>
+    <div class="actions">
+      <a class="btn btn-primary" href="{{ url_for('users.user_new') }}">+ Add a person</a>
+      <a class="btn btn-secondary" href="{{ url_for('users.user_import') }}">Import people (CSV)</a>
+      <a class="btn btn-secondary" href="{{ url_for('users.class_new') }}">+ New class</a>
+      <a class="btn btn-secondary" href="{{ url_for('cms.course_new') }}">+ New course</a>
+      <a class="btn btn-secondary" href="{{ url_for('sync.home') }}">Copy content (USB / Wi-Fi)</a>
+      <a class="btn btn-secondary" href="{{ url_for('users.settings') }}">Settings</a>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Storage</h2>
+    <p>Learning files use <strong>{{ used|filesize }}</strong>. Free space: <strong>{{ free|filesize }}</strong>.</p>
+    <p>Publishing mode: <strong>{% if publish_mode == 'direct' %}teachers publish directly{% elif publish_mode == 'mixed' %}mixed{% else %}administrator approval{% endif %}</strong>
+      · <a href="{{ url_for('users.settings') }}">change</a></p>
+  </section>
+</div>
+
+<section class="card">
+  <div class="page-head"><h2>Recent activity</h2><a href="{{ url_for('users.audit_log') }}">See all</a></div>
+  {% if recent %}
+  <ul class="list">
+    {% for r in recent %}
+    <li><span class="grow"><span class="code">{{ r['action'] }}</span> {{ r['details'] }}</span><small>{{ r['user_name'] or 'system' }} · {{ r['created_at']|dt }}</small></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">Nothing yet.</p>{% endif %}
+</section>
+{% endblock %}

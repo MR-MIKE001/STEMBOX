@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Set up STEMBox{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Welcome to STEMBox</h1>
+  <p>This STEMBox has no accounts yet. Create the <strong>administrator</strong> account. You will use it to add teachers, students and classes.</p>
+  {{ m.errors(errors) }}
+  <form method="post" class="form">
+    {{ m.csrf() }}
+    <label for="name">Your full name</label>
+    <input id="name" name="name" value="{{ form.name }}" required autofocus>
+    <label for="username">Username</label>
+    <input id="username" name="username" value="{{ form.username }}" autocapitalize="none" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" required>
+    <label for="password2">Type the password again</label>
+    <input id="password2" name="password2" type="password" autocomplete="new-password" required>
+    <button type="submit" class="btn btn-primary btn-block">Create administrator</button>
+  </form>
+</section>
+{% endblock %}

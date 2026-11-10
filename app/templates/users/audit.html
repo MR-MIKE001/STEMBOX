@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Activity log{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Settings", url_for('users.settings')), ("Activity log", None)]) }}
+<h1>Activity log</h1>
+<p class="muted">The latest 300 administrative actions.</p>
+{% if rows %}
+<div class="table-wrap">
+<table class="stack">
+  <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr><td data-label="When">{{ r['created_at']|dt }}</td><td data-label="Who">{{ r['user_name'] or 'system' }}</td>
+      <td data-label="Action"><span class="code">{{ r['action'] }}</span></td><td data-label="Target">{{ r['target'] }}</td>
+      <td data-label="Details">{{ r['details'] }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}{{ m.empty("Nothing has been logged yet.") }}{% endif %}
+{% endblock %}

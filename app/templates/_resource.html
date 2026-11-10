@@ -1,0 +1,29 @@
+{# Show one learning file with the right player. Used by students and in teacher previews. #}
+{% macro show(r, save_url=None, start=0, inline_pdf=False) -%}
+{% set src = url_for('learning.media', uuid=r['uuid']) %}
+<div class="resource" id="resource-{{ r['id'] }}">
+  <h3>{{ r['title'] }} <small class="muted">· {{ TYPE_LABELS[r['type']] }}{% if r['size'] %}, {{ r['size']|filesize }}{% endif %}</small></h3>
+  {% if r['type'] == 'video' %}
+    <video class="media-frame" controls preload="metadata" playsinline src="{{ src }}"
+           {% if save_url %}data-save-position="{{ save_url }}" data-start="{{ start }}"{% endif %}>
+      Your browser cannot play this video. <a href="{{ src }}?download=1">Download it</a>.
+    </video>
+    <p><a href="{{ url_for('learning.view_resource', resource_id=r['id']) }}">Open the video on its own page</a></p>
+  {% elif r['type'] == 'audio' %}
+    <audio controls preload="metadata" src="{{ src }}"
+           {% if save_url %}data-save-position="{{ save_url }}" data-start="{{ start }}"{% endif %}>
+      Your browser cannot play this audio. <a href="{{ src }}?download=1">Download it</a>.
+    </audio>
+  {% elif r['type'] == 'image' %}
+    <a href="{{ src }}"><img src="{{ src }}" alt="{{ r['title'] }}" loading="lazy"></a>
+  {% elif r['type'] == 'pdf' %}
+    {% if inline_pdf %}
+      <iframe class="pdf-frame" src="{{ src }}" title="{{ r['title'] }}"></iframe>
+    {% endif %}
+    <div class="actions">
+      <a class="btn btn-primary" href="{{ url_for('learning.view_resource', resource_id=r['id']) }}">Read the PDF</a>
+      <a class="btn btn-secondary" href="{{ src }}?download=1">Download</a>
+    </div>
+  {% endif %}
+</div>
+{%- endmacro %}

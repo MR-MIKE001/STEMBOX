@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Import result{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Users", url_for('users.user_list')), ("Import result", None)]) }}
+<h1>Import result</h1>
+<div class="grid grid-2">
+  <div class="stat"><div class="stat-value">{{ created|length }}</div><div class="stat-label">accounts created</div></div>
+  <div class="stat"><div class="stat-value">{{ problems|length }}</div><div class="stat-label">lines skipped</div></div>
+</div>
+
+{% if problems %}
+<section class="card">
+  <h2>Lines that were skipped</h2>
+  <div class="alert alert-warning"><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>
+  <p>Fix these lines in your file and import it again. Accounts that were already created will be skipped.</p>
+</section>
+{% endif %}
+
+{% if created %}
+<section class="card">
+  <h2>New accounts</h2>
+  <div class="alert alert-info">Print or copy this list now. Temporary passwords are not shown again.</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Class</th><th>Temporary password</th></tr></thead>
+    <tbody>
+    {% for u in created %}
+    <tr><td>{{ u.name }}</td><td class="code">{{ u.username }}</td><td>{{ ROLE_LABELS[u.role] }}</td>
+        <td>{{ u.class_name or '–' }}</td><td class="code">{{ u.password if u.generated else '(from file)' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+<a class="btn btn-primary" href="{{ url_for('users.user_list') }}">Back to users</a>
+{% endblock %}

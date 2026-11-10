@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% import "_resource.html" as res %}
+{% block title %}Edit file{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), (course['title'], url_for('cms.course_detail', course_id=course['id'])),
+                  (lesson['title'], url_for('cms.lesson_detail', lesson_id=lesson['id'])), (resource['title'], None)]) }}
+<section class="card medium">
+  <h1>Rename or replace a file</h1>
+  {{ m.errors(errors) }}
+  {{ res.show(resource) }}
+  <form method="post" enctype="multipart/form-data" class="form" data-busy-text="Saving…">
+    {{ m.csrf() }}
+    <label for="title">Title shown to students</label>
+    <input id="title" name="title" value="{{ resource['title'] }}" required>
+    <label for="file">Replace with a new file (optional)</label>
+    <input id="file" name="file" type="file" accept="{{ accept }}">
+    <p id="file-info" class="hint">Must be a {{ TYPE_LABELS[resource['type']]|lower }} (up to {{ limits[resource['type']] }} MB). The old file is removed.</p>
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Save</button>
+      <a class="btn btn-secondary" href="{{ url_for('cms.lesson_detail', lesson_id=lesson['id']) }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

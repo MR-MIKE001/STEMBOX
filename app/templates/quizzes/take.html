@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ quiz['title'] }}{% endblock %}
+{% block content %}
+<h1>{{ quiz['title'] }}</h1>
+<p class="muted">Choose one answer for each question, then press “Hand in my answers” at the bottom.</p>
+<form method="post" action="{{ url_for('quizzes.attempt_submit', attempt_id=attempt['id']) }}"
+      data-confirm="Hand in your answers now? You cannot change them afterwards.">
+  {{ m.csrf() }}
+  {% for q in questions %}
+  <fieldset class="card question">
+    <legend>Question {{ loop.index }} of {{ questions|length }}</legend>
+    <p><strong>{{ q['text'] }}</strong></p>
+    {% for c in q['choices'] %}
+    <label class="choice"><input type="radio" name="q{{ q['id'] }}" value="{{ c['id'] }}"> <span>{{ c['text'] }}</span></label>
+    {% endfor %}
+  </fieldset>
+  {% endfor %}
+  <button type="submit" class="btn btn-primary btn-block">Hand in my answers</button>
+</form>
+{% endblock %}

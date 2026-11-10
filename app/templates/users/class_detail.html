@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ klass['name'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Classes", url_for('users.class_list')), (klass['name'], None)]) }}
+<div class="page-head">
+  <h1>{{ klass['name'] }} {% if klass['level'] %}<small>· {{ klass['level'] }}</small>{% endif %}</h1>
+  <div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('users.class_edit', class_id=klass['id']) }}">Rename</a>
+    {{ m.post_button(url_for('users.class_delete', class_id=klass['id']), "Delete class", "btn-danger",
+                     confirm="Delete this class? The accounts are kept; only the class is removed.") }}
+  </div>
+</div>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Members ({{ members|length }})</h2>
+    {% if members %}
+    <ul class="list">
+      {% for u in members %}
+      <li>
+        <span class="grow"><strong>{{ u['name'] }}</strong> <span class="badge badge-role">{{ ROLE_LABELS[u['role_in_class']] }}</span>
+          {% if not u['active'] %}<span class="badge badge-inactive">Switched off</span>{% endif %}<br>
+          <small class="code">{{ u['username'] }}</small></span>
+        {{ m.post_button(url_for('users.class_remove_member', class_id=klass['id'], user_id=u['id']), "Remove", "btn-small btn-danger",
+                         confirm="Remove " ~ u['name'] ~ " from this class?") }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">Nobody is in this class yet. Add teachers and students on the right.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Add people</h2>
+    <form method="get" class="form">
+      <label for="role">Show</label>
+      <select id="role" name="role" data-autosubmit>
+        <option value="student"{% if role == 'student' %} selected{% endif %}>Students</option>
+        <option value="teacher"{% if role == 'teacher' %} selected{% endif %}>Teachers</option>
+      </select>
+      <label for="q">Search</label>
+      <input id="q" name="q" type="search" value="{{ q }}">
+      <button class="btn btn-secondary" type="submit">Search</button>
+    </form>
+    {% if candidates %}
+    <form method="post" action="{{ url_for('users.class_add_members', class_id=klass['id']) }}" class="form">
+      {{ m.csrf() }}
+      <input type="hidden" name="role" value="{{ role }}">
+      <fieldset>
+        <legend>Tick the people to add</legend>
+        {% for u in candidates %}
+        <label class="check"><input type="checkbox" name="user_id" value="{{ u['id'] }}"> {{ u['name'] }} <small>({{ u['username'] }})</small></label>
+        {% endfor %}
+      </fieldset>
+      <button type="submit" class="btn btn-primary btn-block">Add to {{ klass['name'] }}</button>
+    </form>
+    {% else %}
+    <p class="muted">Everyone who matches is already in this class, or no {{ role }}s exist yet.
+      <a href="{{ url_for('users.user_new', role=role) }}">Add a {{ role }}</a>.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ course['title'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Subjects", url_for('learning.subjects')), (course['subject_name'], url_for('learning.subject', subject_id=course['subject_id'])), (course['title'], None)]) }}
+<div class="page-head">
+  <div>
+    <h1>{{ course['title'] }}</h1>
+    <p class="muted">{{ course['subject_name'] }}{% if course['level'] %} · {{ course['level'] }}{% endif %}{% if course['class_name'] %} · Class {{ course['class_name'] }}{% endif %}</p>
+  </div>
+  {% if staff_view %}<a class="btn btn-secondary" href="{{ url_for('cms.course_detail', course_id=course['id']) }}">Manage this course</a>{% endif %}
+</div>
+{% if staff_view %}<p class="alert alert-info">You are previewing this course. Drafts are shown with a label; students only see published lessons.</p>{% endif %}
+{% if course['description'] %}<p>{{ course['description'] }}</p>{% endif %}
+
+{% if current_user['role'] == 'student' and total %}
+<section class="card">
+  <h2>Your progress</h2>
+  <p>You have finished {{ done|length }} of {{ total }} lessons.</p>
+  {{ m.progress_bar(done|length, total, "Lessons finished") }}
+</section>
+{% endif %}
+
+{% for group in groups %}
+<section>
+  <h2>{{ group.title }}</h2>
+  <ul class="lesson-list">
+    {% for l in group.lessons %}
+    <li><a href="{{ url_for('learning.lesson', lesson_id=l['id']) }}">
+      <span class="tick{{ ' done' if l['id'] in done else '' }}" aria-hidden="true">{{ '✓' if l['id'] in done else '' }}</span>
+      <span>{{ l['title'] }}{% if l['id'] in done %}<span class="sr-only"> (finished)</span>{% endif %}
+        {% if l['status'] != 'published' %} {{ m.status_badge(l['status']) }}{% endif %}</span>
+      {% if l['kinds'] %}<span class="kind">{% for k in l['kinds'].split(',') %}{{ TYPE_LABELS[k] }}{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+    </a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
+{% if quizzes %}
+<section>
+  <h2>Quizzes</h2>
+  <ul class="lesson-list">
+    {% for z in quizzes %}
+    <li><a href="{{ url_for('quizzes.quiz_start_page', quiz_id=z['id']) }}">
+      <span class="tick{{ ' done' if z['id'] in best and best[z['id']] >= z['pass_mark'] else '' }}" aria-hidden="true">?</span>
+      <span>{{ z['title'] }}{% if z['status'] != 'published' %} {{ m.status_badge(z['status']) }}{% endif %}</span>
+      <span class="kind">{{ z['question_count'] }} questions{% if z['id'] in best %} · best {{ best[z['id']] }}%{% endif %}</span>
+    </a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if not groups and not quizzes %}{{ m.empty("This course has no lessons yet.") }}{% endif %}
+{% endblock %}

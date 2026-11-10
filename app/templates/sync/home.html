@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Copy content{% endblock %}
+{% block content %}
+<h1>Copy content between STEMBoxes</h1>
+<p class="muted">Copy lessons, files and quizzes to or from another STEMBox, with a USB stick or over the Wi-Fi.
+  Every package is checked before anything is saved. Content that is already here is skipped.</p>
+
+<div class="grid grid-2">
+  <section class="card" id="export">
+    <h2>1. Save content to a USB stick</h2>
+    {% if catalog %}
+    <form method="post" action="{{ url_for('sync.export') }}" class="form">
+      {{ m.csrf() }}
+      <p>Tick what to copy. Ticking a subject copies all its courses.</p>
+      {% for s in catalog %}{% if s.courses %}
+      <fieldset>
+        <legend><label class="check"><input type="checkbox" name="subject_id" value="{{ s.id }}"> <strong>{{ s.name }}</strong> (all courses)</label></legend>
+        {% for c in s.courses %}
+        <label class="check"><input type="checkbox" name="course_id" value="{{ c.id }}">
+          {{ c.title }} <small>· {{ c.published }}/{{ c.lessons }} lessons published · {{ c.quizzes }} quizzes</small></label>
+        {% endfor %}
+      </fieldset>
+      {% endif %}{% endfor %}
+      <label class="check"><input type="checkbox" name="include_drafts" value="1"> Also copy drafts (unpublished lessons and quizzes)</label>
+      <button type="submit" class="btn btn-primary">Make the package file</button>
+      <p class="hint">Your browser downloads a .zip file. Save it on the USB stick. Class settings and student results are not copied.</p>
+    </form>
+    {% else %}<p class="muted">There is no content to copy yet.</p>{% endif %}
+  </section>
+
+  <section class="card" id="import">
+    <h2>2. Load content from a USB stick</h2>
+    <form method="post" action="{{ url_for('sync.import_upload') }}" enctype="multipart/form-data" class="form"
+          data-busy-text="Checking and loading… please wait">
+      {{ m.csrf() }}
+      <label for="package">Package file (.zip) made by a STEMBox</label>
+      <input id="package" name="package" type="file" accept=".zip,application/zip" required>
+      <p id="package-info" class="hint"></p>
+      <button type="submit" class="btn btn-primary">Check and load</button>
+    </form>
+  </section>
+</div>
+
+<section class="card" id="wifi">
+  <h2>3. Copy from another STEMBox on this Wi-Fi</h2>
+  <p>On the other STEMBox, an administrator must switch on <em>“Allow another STEMBox on this Wi-Fi to copy content”</em> in Settings.
+    Its address is shown on its administrator home page.</p>
+  <form method="post" action="{{ url_for('sync.wifi_connect') }}" class="form medium" data-busy-text="Connecting…">
+    {{ m.csrf() }}
+    <label for="address">Address of the other STEMBox</label>
+    <input id="address" name="address" placeholder="192.168.1.20:5000" required autocapitalize="none">
+    <label for="r-username">Administrator username on the other STEMBox</label>
+    <input id="r-username" name="username" autocomplete="off" autocapitalize="none" required>
+    <label for="r-password">Its password</label>
+    <input id="r-password" name="password" type="password" autocomplete="off" required>
+    <button type="submit" class="btn btn-primary">Connect and see its content</button>
+  </form>
+  <p class="hint">Sharing from <strong>this</strong> STEMBox is {{ 'ON' if allow_remote_pull else 'OFF' }}.
+    <a href="{{ url_for('users.settings') }}">Change in Settings</a>.</p>
+</section>
+
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Recently made packages</h2>
+    {% if exports %}
+    <ul class="list">{% for p in exports %}<li><span class="grow code">{{ p.name }}</span>
+      <a class="btn btn-small btn-secondary" href="{{ url_for('sync.download_package', name=p.name) }}">Download</a></li>{% endfor %}</ul>
+    {% else %}<p class="muted">None yet.</p>{% endif %}
+  </section>
+  <section class="card">
+    <h2>Recently loaded packages</h2>
+    {% if history %}
+    <ul class="list">{% for h in history %}<li><span class="grow">{{ h.source }}<br><small>{{ h.imported_at|dt }}</small></span>
+      <small>added {{ h.counts.added or 0 }}, updated {{ h.counts.updated or 0 }}, skipped {{ h.counts.skipped or 0 }}, rejected {{ h.counts.rejected or 0 }}</small></li>{% endfor %}</ul>
+    {% else %}<p class="muted">None yet.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

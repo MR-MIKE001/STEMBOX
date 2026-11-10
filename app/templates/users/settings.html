@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Settings</h1>
+  <a class="btn btn-secondary" href="{{ url_for('users.audit_log') }}">Activity log</a>
+</div>
+<form method="post" class="card medium form">
+  {{ m.csrf() }}
+  <fieldset>
+    <legend>Who can publish lessons and quizzes?</legend>
+    {% for key, (label, help) in modes.items() %}
+    <label class="choice"><input type="radio" name="publish_mode" value="{{ key }}"{% if current.publish_mode == key %} checked{% endif %}>
+      <span><strong>{{ label }}</strong><br><small>{{ help }}</small></span></label>
+    {% endfor %}
+    <p class="hint">Administrators can always publish directly.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Accounts</legend>
+    <label class="check"><input type="checkbox" name="allow_registration" value="1"{% if current.allow_registration == '1' %} checked{% endif %}>
+      Students may create their own account on the log-in page</label>
+    <p class="hint">When this is off, only administrators create accounts.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Sharing with other STEMBoxes</legend>
+    <label class="check"><input type="checkbox" name="allow_remote_pull" value="1"{% if current.allow_remote_pull == '1' %} checked{% endif %}>
+      Allow another STEMBox on this Wi-Fi to copy content from this one</label>
+    <p class="hint">The other STEMBox must still log in with an administrator username and password from this STEMBox.</p>
+  </fieldset>
+
+  <label for="site_name">Name shown at the top of every page</label>
+  <input id="site_name" name="site_name" value="{{ current.site_name }}" maxlength="60">
+
+  <button type="submit" class="btn btn-primary">Save settings</button>
+</form>
+{% endblock %}

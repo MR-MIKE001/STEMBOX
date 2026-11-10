@@ -1,0 +1,50 @@
+{# Shared building blocks. Import with: {% import "_macros.html" as m %} #}
+
+{% macro csrf() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{% macro errors(list) -%}
+{% if list %}
+<div class="alert alert-error" role="alert">
+  <strong>Please fix the following:</strong>
+  <ul>{% for e in list %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{%- endmacro %}
+
+{# A one-button form for actions that change data (delete, publish, ...). #}
+{% macro post_button(url, label, style="btn-secondary", confirm=None, fields=None) -%}
+<form method="post" action="{{ url }}" class="inline-form"{% if confirm %} data-confirm="{{ confirm }}"{% endif %}>
+  {{ csrf() }}
+  {% if fields %}{% for k, v in fields.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}{% endif %}
+  <button type="submit" class="btn {{ style }}">{{ label }}</button>
+</form>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+<span class="badge badge-{{ status }}">{{ STATUS_LABELS.get(status, status) }}</span>
+{%- endmacro %}
+
+{% macro breadcrumbs(items) -%}
+<nav class="breadcrumbs" aria-label="You are here">
+  {% for label, url in items %}
+    {% if url %}<a href="{{ url }}">{{ label }}</a>{% else %}<span aria-current="page">{{ label }}</span>{% endif %}
+    {% if not loop.last %}<span class="sep" aria-hidden="true">›</span>{% endif %}
+  {% endfor %}
+</nav>
+{%- endmacro %}
+
+{% macro empty(message, action_url=None, action_label=None) -%}
+<div class="empty">
+  <p>{{ message }}</p>
+  {% if action_url %}<a class="btn btn-primary" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro progress_bar(value, max=100, label="") -%}
+<div class="progress-row">
+  <progress value="{{ value }}" max="{{ max or 1 }}" aria-label="{{ label }}"></progress>
+  <span class="progress-text">{{ percent(value, max) }}%</span>
+</div>
+{%- endmacro %}

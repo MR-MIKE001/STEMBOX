@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Subjects{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Content", url_for('cms.content_home')), ("Subjects", None)]) }}
+<div class="page-head">
+  <h1>Subjects</h1>
+  <a class="btn btn-primary" href="{{ url_for('cms.subject_new') }}">+ New subject</a>
+</div>
+{% if subjects %}
+<section class="card">
+<ul class="list">
+  {% for s in subjects %}
+  <li>
+    <span class="grow"><strong>{{ s['name'] }}</strong> {% if s['is_sample'] %}<span class="badge badge-sample">Sample</span>{% endif %}<br>
+      <small>{{ s['course_count'] }} course{{ '' if s['course_count'] == 1 else 's' }}{% if s['description'] %} · {{ s['description'] }}{% endif %}</small></span>
+    <span class="actions">
+      <a class="btn btn-small btn-secondary" href="{{ url_for('cms.course_new', subject=s['id']) }}">+ Course</a>
+      {% if can_edit(s) %}
+      <a class="btn btn-small btn-secondary" href="{{ url_for('cms.subject_edit', subject_id=s['id']) }}">Edit</a>
+      {% if s['course_count'] == 0 %}
+      {{ m.post_button(url_for('cms.subject_delete', subject_id=s['id']), "Delete", "btn-small btn-danger", confirm="Delete this subject?") }}
+      {% endif %}
+      {% endif %}
+    </span>
+  </li>
+  {% endfor %}
+</ul>
+</section>
+{% else %}
+{{ m.empty("No subjects yet.", url_for('cms.subject_new'), "+ New subject") }}
+{% endif %}
+{% endblock %}

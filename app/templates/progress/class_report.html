@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Progress: {{ klass['name'] }}{% endblock %}
+{% block content %}
+{{ m.breadcrumbs([("Progress", url_for('progress.overview')), (klass['name'], None)]) }}
+<div class="page-head">
+  <h1>{{ klass['name'] }}</h1>
+  <a class="btn btn-secondary" href="{{ url_for('progress.class_export', class_id=klass['id'], course=course_id) }}">Download as CSV (Excel)</a>
+</div>
+
+<form method="get" class="card filters">
+  <div>
+    <label for="course">Course</label>
+    <select id="course" name="course" data-autosubmit>
+      <option value="">All courses for this class</option>
+      {% for c in all_courses %}<option value="{{ c['id'] }}"{% if course_id == c['id'] %} selected{% endif %}>{{ c['subject_name'] }} › {{ c['title'] }}</option>{% endfor %}
+    </select>
+  </div>
+  <button class="btn btn-secondary" type="submit">Show</button>
+</form>
+
+<div class="grid grid-4">
+  <div class="stat"><div class="stat-value">{{ s.student_count }}</div><div class="stat-label">students</div></div>
+  <div class="stat"><div class="stat-value">{{ s.completion_rate }}%</div><div class="stat-label">of lessons finished</div></div>
+  <div class="stat"><div class="stat-value">{{ s.avg_score ~ '%' if s.avg_score is not none else '–' }}</div><div class="stat-label">average quiz score</div></div>
+  <div class="stat"><div class="stat-value">{{ s.active_students }}</div><div class="stat-label">students who have started</div></div>
+</div>
+
+<section class="card">
+  <h2>Students</h2>
+  {% if s.students %}
+  <div class="table-wrap">
+  <table class="stack">
+    <thead><tr><th>Student</th><th>Lessons finished</th><th>Quizzes taken</th><th>Passed</th><th>Average score</th><th>Last active</th></tr></thead>
+    <tbody>
+    {% for r in s.students %}
+    <tr>
+      <td data-label="Student"><a href="{{ url_for('progress.student_detail', user_id=r.id) }}"><strong>{{ r.name }}</strong></a>
+        {% if not r.active %}<span class="badge badge-inactive">Switched off</span>{% endif %}</td>
+      <td data-label="Lessons finished">{{ r.completed }}/{{ r.lessons }} {{ m.progress_bar(r.completed, r.lessons, "Lessons finished") }}</td>
+      <td data-label="Quizzes taken">{{ r.quizzes_taken }}/{{ r.quizzes }}</td>
+      <td data-label="Passed">{{ r.quizzes_passed }}</td>
+      <td data-label="Average score">{{ r.avg_score ~ '%' if r.avg_score is not none else '–' }}</td>
+      <td data-label="Last active">{{ r.last_active|dt if r.last_active else 'Not started' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">No students in this class yet.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Quizzes</h2>
+  {% if s.quizzes %}
+  <div class="table-wrap">
+  <table class="stack">
+    <thead><tr><th>Quiz</th><th>Taken by</th><th>Average best score</th><th>Pass rate</th><th></th></tr></thead>
+    <tbody>
+    {% for q in s.quizzes %}
+    <tr>
+      <td data-label="Quiz"><strong>{{ q.title }}</strong><br><small>{{ q.course_title }} · pass mark {{ q.pass_mark }}%</small></td>
+      <td data-label="Taken by">{{ q.taken }} of {{ q.students }} students</td>
+      <td data-label="Average best score">{{ q.avg_score ~ '%' if q.avg_score is not none else '–' }}</td>
+      <td data-label="Pass rate">{{ q.pass_rate ~ '%' if q.pass_rate is not none else '–' }}</td>
+      <td><a class="btn btn-small btn-secondary" href="{{ url_for('progress.quiz_report', quiz_id=q.id) }}">Question details</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">No published quizzes for this class.</p>{% endif %}
+</section>
+{% endblock %}
