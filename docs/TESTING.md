@@ -1,10 +1,10 @@
 # STEMBox testing report
 
-**Run date:** 11 Nov 2026 · **Platform:** Windows 11, Python 3.14.3, Flask 3.1, Waitress 3 · **Browser for layout tests:** Chrome (headless)
+**Run date:** 13 Nov 2026 · **Platform:** Windows 11, Python 3.14.3, Flask 3.1, Waitress 3 · **Browser for layout tests:** Chrome (headless)
 
 | Suite | Command | Result |
 |---|---|---|
-| Automated tests | `python -m pytest` | **106 passed, 0 failed** |
+| Automated tests | `python -m pytest` | **125 passed, 0 failed** |
 | Layout check (3 roles + login, 32 pages × 3 widths) | `python tools/ui_check.py` | **96 page/width combinations, no problems** |
 
 Every automated test drives the real application, either through Flask's test client or, in `test_server.py`, a real Waitress server reached over HTTP. Content, quizzes and transfers are created through the same routes the browser uses.
@@ -37,7 +37,25 @@ Every automated test drives the real application, either through Flask's test cl
 | 5 Monitoring | `test_progress.py` | 7 | See checklist item 6 |
 | 6 Offline & LAN | `test_offline.py`, `test_server.py` | 7 + 1 | See checklist items 7, 8 and 10 |
 | 7 Transfer | `test_sync.py` | 23 | See checklist item 9 |
+| Corrections (13 Nov) | `test_corrections.py` | 19 | See the next section |
 | 8 UI | `tools/ui_check.py` | 96 combos | See checklist item 11 |
+
+## Correction round (13 Nov 2026)
+
+| Requirement | Result | Evidence (`tests/test_corrections.py` unless noted) |
+|---|---|---|
+| Public self-registration disabled; admin-only accounts | **PASS** | `test_no_self_registration` (in `test_auth_users.py`): `/register` returns 404 for GET and POST, posting the old setting has no effect, no account is created, and the login page has no sign-up link |
+| Existing databases upgrade safely | **PASS** | `test_migration_upgrades_existing_database`: a version-1 database with the old setting and a user is upgraded to version 2 at start-up; the setting is removed and all other data is kept |
+| Role-based login and redirect to the right dashboard | **PASS** | `test_login_goes_to_role_dashboard` (admin, teacher, student) |
+| Change own password; admin reset, activate and deactivate | **PASS** | `test_teacher_change_password_rule`, `test_staff_need_longer_passwords`, `test_admin_activates_and_deactivates`, and the existing Phase 1 tests |
+| Secure password rules | **PASS** | Staff need 8+ characters and students 6+, checked on create, reset, CSV import and self-change. Generated passwords always pass (`test_generated_passwords_meet_every_rule`) |
+| Secure sessions | **PASS** | `test_session_cookie_flags` (HttpOnly, SameSite=Lax, named cookie), `test_idle_session_is_logged_out`, `test_active_session_stays_logged_in` |
+| Input validation | **PASS** | `test_overlong_input_rejected` (user name, class name, course title, quiz question) |
+| No unauthorised access to student records | **PASS** | `test_student_records_protected`: a classmate gets 404 or 403 on another student's attempt, progress and admin pages; a teacher of another class gets 403; the class teacher is allowed |
+| Student dashboard redesign with 3D illustrations | **PASS** | `test_student_dashboard_redesign` (greeting, hero and subject artwork, stat tiles, menu icons, fixed image sizes); `test_illustrations_are_small_and_valid` (9 SVGs, each under 6 KB, valid XML, no scripts) |
+| Illustrations only on the student dashboard | **PASS** | `test_illustrations_only_on_student_dashboard`: none on admin or teacher pages (no menu icons there either), and none on other student pages |
+| Optimised assets, no animation, no autoplay | **PASS** | `test_static_assets_cached_and_versioned` (versioned links, 7-day cache, 31 KB font), `test_no_css_animations`, `test_no_autoplay_anywhere` |
+| Works on phone, tablet and desktop | **PASS** | `tools/ui_check.py`: 96 page/width combinations, no sideways scrolling or small tap targets. Screenshots of the new student dashboard were reviewed at 390 px and 1280 px |
 
 ## Security checks (brief §8)
 

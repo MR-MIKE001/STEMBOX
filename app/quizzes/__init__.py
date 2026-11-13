@@ -6,7 +6,7 @@ from ..auth import login_required, roles_required
 from ..cms import get_course_or_404
 from ..db import audit, execute, get_db, new_uuid, now, query
 from ..permissions import can_manage_course, can_publish_directly, can_view_quiz, manageable_courses_clause
-from ..utils import percent, to_int
+from ..utils import length_errors, percent, to_int
 
 bp = Blueprint("quizzes", __name__)
 
@@ -95,6 +95,8 @@ def _read_quiz_form(course_id):
     errors = []
     if not form["title"]:
         errors.append("Please type the quiz title.")
+    errors += length_errors([("The quiz title", form["title"], "title"),
+                             ("The instructions", form["description"], "description")])
     if not 0 <= form["pass_mark"] <= 100:
         errors.append("The pass mark must be a number from 0 to 100.")
     if form["lesson_id"] and not query("SELECT 1 FROM lessons WHERE id = ? AND course_id = ?",
@@ -163,6 +165,8 @@ def _read_question_form():
     errors = []
     if not text:
         errors.append("Please type the question.")
+    errors += length_errors([("The question", text, "question")] +
+                            [(f"Answer {i + 1}", t, "choice") for i, t in enumerate(raw)])
     choices = [(i, t) for i, t in enumerate(raw) if t]
     if len(choices) < 2:
         errors.append("Type at least two possible answers.")

@@ -98,7 +98,7 @@ def test_dashboards_render(app, client, users, scenario):
         client.post("/logout")
     login(client, "student")
     page = client.get("/dashboard").data.decode()
-    assert "1 of 1 lessons finished" in page and "2/2" in page
+    assert "1/1" in page and "lessons finished" in page and "2/2" in page
     client.post("/logout")
     login(client, "teacher")
     assert "Student" in client.get("/dashboard").data.decode()

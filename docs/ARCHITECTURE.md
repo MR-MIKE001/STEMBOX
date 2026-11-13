@@ -32,7 +32,7 @@ STEMBox is a single Python web application that runs on a small computer, such a
 | `app/config.py` | All settings, overridable by environment variables or `.env`. |
 | `app/db.py` | SQLite connection per request, migrations (`PRAGMA user_version`), settings table, `audit()` helper. |
 | `app/schema.sql` | Migration 1: the full schema (see `DATABASE.md`). |
-| `app/auth/` | Login, logout, registration, first-run setup helpers, password change, lockout, `login_required` / `roles_required` decorators. |
+| `app/auth/` | Login, logout, password change (role-based rules), idle-session timeout, lockout, `login_required` / `roles_required` decorators. |
 | `app/main/` | Home redirect, first-run `/setup`, the three role dashboards. |
 | `app/users/` | Admin: users, CSV import, classes and membership, settings, activity log. URL prefix `/admin`. |
 | `app/cms/` | Subjects, courses, topics, lessons, file upload/replace/delete, search and filters, publish actions, approval queue. URL prefix `/content`. |
@@ -53,7 +53,8 @@ STEMBox is a single Python web application that runs on a small computer, such a
 2. A route decorator (`login_required` or `roles_required(...)`) rejects the wrong roles with **403**.
 3. The view loads the object and calls `permissions.*` to check access to *that* object: `can_manage_course`, `can_view_lesson`, and so on. Objects a student may not see return **404**, so their existence is not revealed.
 4. Every POST must carry a CSRF token (Flask-WTF). The `/api/*` endpoints are the exception: they use HTTP Basic auth, not cookies.
-5. Responses get `X-Content-Type-Options`, `X-Frame-Options` and `Referrer-Policy` headers. HTML pages also get a strict Content-Security-Policy.
+5. Static links carry `?v=<file modification time>`, so browsers can cache CSS, JS, fonts and images for a week (`SEND_FILE_MAX_AGE_DEFAULT`) and still fetch a changed file straight away.
+6. Responses get `X-Content-Type-Options`, `X-Frame-Options` and `Referrer-Policy` headers. HTML pages also get a strict Content-Security-Policy.
 
 ## Key workflows
 

@@ -15,10 +15,6 @@
     <input id="password" name="password" type="password" autocomplete="current-password" required>
     <button type="submit" class="btn btn-primary btn-block">Log in</button>
   </form>
-  {% if allow_registration %}
-  <p class="center">New student? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
-  {% else %}
-  <p class="muted center">No account? Ask your teacher or the STEMBox administrator.</p>
-  {% endif %}
+  <p class="muted center">No account or forgot your password? Ask your teacher or the STEMBox administrator.</p>
 </section>
 {% endblock %}

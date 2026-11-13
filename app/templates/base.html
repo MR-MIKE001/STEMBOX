@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}{{ site_name }}{% endblock %} · {{ site_name }}</title>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/nunito-sans-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/stembox.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='img/icon.svg') }}" type="image/svg+xml">
   {# Loaded without "defer" so the menu is hidden before the page is drawn (no flicker). #}
   <script src="{{ url_for('static', filename='js/stembox.js') }}"></script>
 </head>
-<body>
+<body class="{{ 'role-' ~ current_user['role'] if current_user else 'role-guest' }}">
 <a class="skip-link" href="#main">Skip to content</a>
 {% macro user_box(cls) %}
 <div class="nav-user {{ cls }}">
@@ -40,7 +41,8 @@
     <div class="nav-inner">
       <ul>
         {% for link in nav_links() %}
-        <li><a href="{{ link.url }}"{% if link.active %} class="active" aria-current="page"{% endif %}>{{ link.label }}</a></li>
+        <li><a href="{{ link.url }}"{% if link.active %} class="active" aria-current="page"{% endif %}>
+          {%- if link.icon %}<svg class="icon" aria-hidden="true" focusable="false"><use href="{{ url_for('static', filename='img/icons.svg') }}#{{ link.icon }}"></use></svg>{% endif %}{{ link.label }}</a></li>
         {% endfor %}
       </ul>
       {{ user_box("mobile-only") }}

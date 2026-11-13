@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Trophy">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b45309"/><stop offset=".35" stop-color="#fde047"/><stop offset=".6" stop-color="#facc15"/><stop offset="1" stop-color="#a16207"/></linearGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#3730a3"/></linearGradient>
+  </defs>
+  <ellipse cx="48" cy="88" rx="26" ry="4.5" fill="#1e1b4b" opacity=".18"/>
+  <path d="M28 18 C14 18 12 40 32 46" fill="none" stroke="#ca8a04" stroke-width="5" stroke-linecap="round"/>
+  <path d="M68 18 C82 18 84 40 64 46" fill="none" stroke="#ca8a04" stroke-width="5" stroke-linecap="round"/>
+  <path d="M26 12 H70 V30 Q70 54 48 56 Q26 54 26 30 Z" fill="url(#g)"/>
+  <ellipse cx="48" cy="12" rx="22" ry="4" fill="#fef08a"/>
+  <path d="M43 55 H53 L55 68 H41 Z" fill="#ca8a04"/>
+  <rect x="30" y="68" width="36" height="14" rx="3" fill="url(#base)"/>
+  <rect x="38" y="72" width="20" height="5" rx="2" fill="#fde68a"/>
+  <path d="M48 22 l3 6 6.5 1 -4.7 4.6 1.1 6.5 -5.9 -3.1 -5.9 3.1 1.1 -6.5 -4.7 -4.6 6.5 -1 z" fill="#fff" opacity=".85"/>
+</svg>

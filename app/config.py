@@ -53,9 +53,18 @@ class Config:
     MAX_CONTENT_LENGTH = max(_env_int("STEMBOX_MAX_PACKAGE_MB", 2048) * MB,
                              _env_int("STEMBOX_MAX_VIDEO_MB", 500) * MB) + MB
 
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = "Lax"
-    PERMANENT_SESSION_LIFETIME = 60 * 60 * 12  # 12 hours: one school day
+    SESSION_COOKIE_NAME = "stembox_session"
+    SESSION_COOKIE_HTTPONLY = True             # page scripts cannot read the login cookie
+    SESSION_COOKIE_SAMESITE = "Lax"            # other sites cannot send it with their forms
+    # Only set this when STEMBox is served over HTTPS (e.g. behind a reverse proxy).
+    SESSION_COOKIE_SECURE = _env_bool("STEMBOX_HTTPS", False)
+    PERMANENT_SESSION_LIFETIME = 60 * 60 * 12  # 12 hours at most: one school day
+    # Log out after this many minutes without any page being opened (0 = never).
+    SESSION_IDLE_MINUTES = _env_int("STEMBOX_SESSION_IDLE_MINUTES", 120)
+
+    # Browsers may cache CSS/JS/fonts/images for a week; links carry a version
+    # number (see create_app) so changed files are fetched again immediately.
+    SEND_FILE_MAX_AGE_DEFAULT = 7 * 24 * 60 * 60
 
     WTF_CSRF_TIME_LIMIT = None  # token valid for the whole session
     WTF_CSRF_ENABLED = _env_bool("STEMBOX_CSRF", True)

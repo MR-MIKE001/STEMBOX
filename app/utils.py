@@ -113,6 +113,23 @@ def is_safe_next(target):
     return not parsed.scheme and not parsed.netloc and target.startswith("/") and not target.startswith("//")
 
 
+# Maximum lengths for text fields (checked on the server for every form).
+MAX_LEN = {
+    "name": 100, "level": 50, "title": 200, "short": 500, "description": 2000,
+    "question": 2000, "choice": 500,
+}
+
+
+def length_errors(values):
+    """values: [(label, text, kind)] -> list of plain-language errors for texts that are too long."""
+    errors = []
+    for label, text, kind in values:
+        limit = MAX_LEN[kind]
+        if text and len(text) > limit:
+            errors.append(f"{label} is too long ({len(text)} characters; the limit is {limit}).")
+    return errors
+
+
 def to_int(value, default=None):
     try:
         return int(value)

@@ -1,4 +1,7 @@
 """Role dashboards."""
+import re
+from datetime import datetime
+
 from flask import current_app, g, render_template, request
 
 from ..db import get_setting, query
@@ -67,6 +70,40 @@ def teacher_dashboard():
                            returned=returned, publish_mode=get_setting("publish_mode"))
 
 
+# Subject keywords -> 3D artwork in static/img/3d/ (student dashboard only).
+SUBJECT_ART = [
+    (("math", "algebra", "geometr", "calcul", "number", "fraction", "statistic"), "math"),
+    (("physic", "electric", "energy", "force", "motion"), "physics"),
+    (("chem", "science", "lab"), "science"),
+    (("bio", "life", "living", "plant", "animal", "health", "agric"), "biology"),
+    (("geo", "earth", "environment", "climate", "map"), "geography"),
+    (("comput", "ict", "coding", "program", "technolog", "digital", "robot"), "computing"),
+]
+
+
+def subject_art(*texts):
+    """Pick artwork from the most specific text first (course title, then subject name)."""
+    for text in texts:
+        text = (text or "").lower()
+        for keywords, art in SUBJECT_ART:
+            if any(k in text for k in keywords):
+                return art
+    return "books"
+
+
+def _first_name(name):
+    clean = re.sub(r"^\s*\[[^\]]*\]\s*", "", name or "")  # drop a "[SAMPLE]" style prefix
+    words = clean.split()
+    if len(words) > 1 and words[0].lower() in ("student", "teacher", "mr", "mrs", "ms", "dr"):
+        words = words[1:]
+    return words[0] if words else "there"
+
+
+def _greeting():
+    hour = datetime.now().hour
+    return "Good morning" if hour < 12 else "Good afternoon" if hour < 17 else "Good evening"
+
+
 def student_dashboard():
     sql, args = visible_courses_sql(g.user)
     courses = query(sql + " ORDER BY s.name, c.title", args)
@@ -74,7 +111,8 @@ def student_dashboard():
     course_rows = []
     for c in courses:
         published = {r["id"] for r in query("SELECT id FROM lessons WHERE course_id = ? AND status = 'published'", (c["id"],))}
-        course_rows.append({"course": c, "done": len(published & done_all), "total": len(published)})
+        course_rows.append({"course": c, "done": len(published & done_all), "total": len(published),
+                            "art": subject_art(c["title"], c["subject_name"])})
     visible_ids = [c["id"] for c in courses]
     continue_lesson = None
     new_lessons = []
@@ -93,5 +131,16 @@ def student_dashboard():
     results = query(
         "SELECT a.*, z.title AS quiz_title, z.pass_mark FROM attempts a JOIN quizzes z ON z.id = a.quiz_id "
         "WHERE a.user_id = ? AND a.finished_at IS NOT NULL ORDER BY a.finished_at DESC LIMIT 5", (g.user["id"],))
+    best = query(
+        "SELECT z.pass_mark, MAX(CAST(a.score AS REAL) / NULLIF(a.total, 0)) AS best FROM attempts a "
+        "JOIN quizzes z ON z.id = a.quiz_id WHERE a.user_id = ? AND a.finished_at IS NOT NULL GROUP BY a.quiz_id",
+        (g.user["id"],))
+    scores = [100 * (b["best"] or 0) for b in best]
+    stats = {
+        "lessons_done": len(done_all),
+        "quizzes_passed": sum(1 for b, s in zip(best, scores) if s >= b["pass_mark"]),
+        "avg_score": round(sum(scores) / len(scores)) if scores else None,
+    }
     return render_template("main/student_dashboard.html", course_rows=course_rows, continue_lesson=continue_lesson,
-                           new_lessons=new_lessons, results=results, done_count=len(done_all))
+                           new_lessons=new_lessons, results=results, stats=stats,
+                           first_name=_first_name(g.user["name"]), greeting=_greeting())

@@ -19,9 +19,8 @@
 
   <fieldset>
     <legend>Accounts</legend>
-    <label class="check"><input type="checkbox" name="allow_registration" value="1"{% if current.allow_registration == '1' %} checked{% endif %}>
-      Students may create their own account on the log-in page</label>
-    <p class="hint">When this is off, only administrators create accounts.</p>
+    <p class="hint">Only administrators create accounts (in <a href="{{ url_for('users.user_list') }}">Users</a>, one at a time or from a CSV file).
+      Teachers and students log in with the username and password the administrator gives them.</p>
   </fieldset>
 
   <fieldset>

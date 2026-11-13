@@ -23,9 +23,9 @@ MENUS = {
         ("Preview as student", "learning.subjects", "learning."),
     ],
     "student": [
-        ("Home", "main.dashboard", "main."),
-        ("Subjects", "learning.subjects", "learning."),
-        ("My results", "quizzes.my_results", "quizzes.my_results"),
+        ("Home", "main.dashboard", "main.", "home"),
+        ("Subjects", "learning.subjects", "learning.", "grid"),
+        ("My results", "quizzes.my_results", "quizzes.my_results", "trophy"),
     ],
 }
 
@@ -36,7 +36,7 @@ def nav_links():
         return []
     endpoint = request.endpoint or ""
     links = []
-    for label, target, prefix in MENUS[user["role"]]:
+    for label, target, prefix, *icon in MENUS[user["role"]]:
         try:
             url = url_for(target)
         except BuildError:  # module not installed: hide its menu item
@@ -44,6 +44,7 @@ def nav_links():
         links.append({
             "label": label,
             "url": url,
+            "icon": icon[0] if icon else None,  # icons are used in the student menu only
             "active": endpoint == target or (prefix.endswith(".") and endpoint.startswith(prefix))
                       or (not prefix.endswith(".") and endpoint.startswith(prefix)),
         })

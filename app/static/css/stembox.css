@@ -1,6 +1,16 @@
 /* STEMBox stylesheet. No external fonts or frameworks: everything works offline.
    Mobile first; larger layouts are added with min-width media queries. */
 
+/* Nunito Sans (SIL Open Font License, see static/fonts/OFL-LICENSE.txt), served locally.
+   One variable file covers every weight (31 KB). */
+@font-face {
+  font-family: "Nunito Sans";
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url("../fonts/nunito-sans-latin-wght-normal.woff2") format("woff2");
+}
+
 :root {
   --bg: #f4f6fb;
   --surface: #ffffff;
@@ -29,7 +39,7 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Arial, sans-serif;
+  font-family: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Arial, sans-serif;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -291,6 +301,92 @@ audio { width: 100%; }
 .code { font-family: ui-monospace, Consolas, monospace; background: #eef1f7; padding: 2px 6px; border-radius: 4px; word-break: break-all; }
 .address { font-size: 1.3rem; font-weight: 700; }
 pre.box { white-space: pre-wrap; background: #eef1f7; padding: 12px; border-radius: var(--radius); }
+
+/* ---------- icons (student menu and dashboard) ---------- */
+.icon { width: 1.25em; height: 1.25em; flex: none; vertical-align: -0.25em; }
+.icon-sm { width: 1em; height: 1em; }
+.icon-accent { color: var(--s-violet); }
+.site-nav li a .icon { margin-right: 8px; }
+
+/* ---------- student dashboard (the only place with 3D illustrations) ---------- */
+:root {
+  --s-indigo: #4f46e5;
+  --s-violet: #7c3aed;
+  --s-ink: #1e1b4b;
+}
+.student-home h2 { display: flex; align-items: center; gap: 8px; }
+.s-hero {
+  display: grid; grid-template-columns: 1fr; align-items: center; gap: 8px;
+  padding: 24px 20px 0; margin-bottom: 20px; border-radius: 20px; overflow: hidden; color: #fff;
+  background: linear-gradient(135deg, var(--s-indigo) 0%, var(--s-violet) 100%);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, .25);
+}
+.s-hero h1 { font-size: 2rem; font-weight: 800; margin: 0 0 6px; }
+.s-hero p { margin: 0 0 14px; font-size: 1.1rem; color: #ede9fe; }
+.s-hero p strong { color: #fff; }
+.s-hero-sub { color: #c4b5fd; }
+.s-eyebrow { font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: .85rem !important; color: #c4b5fd !important; margin-bottom: 4px !important; }
+.s-btn-light { background: #fff; color: var(--s-indigo); font-weight: 800; box-shadow: 0 4px 0 rgba(30, 27, 75, .25); }
+.s-btn-light:hover { background: #eef2ff; color: var(--s-ink); }
+.s-hero-art { width: 100%; max-width: 300px; height: auto; justify-self: center; margin-bottom: -6px; }
+@media (min-width: 700px) {
+  .s-hero { grid-template-columns: 1.3fr 1fr; padding: 32px 32px 0; }
+  .s-hero-text { padding-bottom: 28px; }
+  .s-hero h1 { font-size: 2.4rem; }
+  .s-hero-art { max-width: 340px; }
+}
+
+.s-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+@media (max-width: 599px) {
+  /* Phones: three compact tiles in one row, icon above the number. */
+  .s-stat { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; }
+  .s-stat-icon { width: 40px; height: 40px; border-radius: 12px; }
+  .s-stat-icon .icon { width: 22px; height: 22px; }
+  .s-stat-value { font-size: 1.4rem; }
+  .s-stat-label { font-size: .85rem; line-height: 1.25; }
+}
+.s-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+}
+.s-stat-icon { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 14px; flex: none; }
+.s-stat-icon .icon { width: 28px; height: 28px; }
+.s-stat-value { display: block; font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
+.s-stat-label { display: block; color: var(--muted); font-weight: 600; }
+.s-stat-green .s-stat-icon { background: #dcfce7; color: #15803d; }
+.s-stat-amber .s-stat-icon { background: #fef3c7; color: #b45309; }
+.s-stat-violet .s-stat-icon { background: #ede9fe; color: var(--s-violet); }
+
+.s-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.s-section-head a { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-weight: 700; text-decoration: none; }
+.s-courses { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 24px; }
+@media (min-width: 600px) { .s-courses { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .s-courses { grid-template-columns: repeat(3, 1fr); } }
+.s-course {
+  display: flex; align-items: center; gap: 14px; padding: 16px; min-height: 104px;
+  background: var(--surface); border: 2px solid var(--border); border-radius: 18px;
+  color: var(--text); text-decoration: none; box-shadow: var(--shadow);
+}
+.s-course:hover { border-color: var(--s-indigo); color: var(--text); }
+.s-course-art { width: 72px; height: 72px; flex: none; }
+.s-course-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.s-course-subject { font-size: .85rem; font-weight: 700; color: var(--s-violet); text-transform: uppercase; letter-spacing: .03em; }
+.s-course-title { font-size: 1.15rem; font-weight: 800; line-height: 1.25; }
+.s-course-progress { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-weight: 700; color: var(--muted); font-size: .9rem; }
+.s-course-progress progress { accent-color: var(--s-indigo); }
+
+.s-lists .card { border-radius: 18px; }
+.s-list { list-style: none; margin: 0 0 12px; padding: 0; }
+.s-list a {
+  display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 4px;
+  border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;
+}
+.s-list li:last-child a { border-bottom: 0; }
+.s-list a:hover strong { color: var(--s-indigo); }
+.s-list .grow { flex: 1; min-width: 0; }
+.s-list-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: #eef2ff; color: var(--s-indigo); flex: none; }
+.s-empty-small { display: flex; align-items: center; gap: 14px; }
+.student-home .empty img { display: block; margin: 0 auto 8px; }
 
 @media print {
   .topbar, .footer, .actions, .btn { display: none !important; }

@@ -7,7 +7,7 @@ from flask import Blueprint, Response, abort, current_app, flash, g, redirect, r
 from ..auth import (ROLES, generate_temp_password, hash_password, password_problem, roles_required,
                     username_problem)
 from ..db import audit, execute, get_db, get_setting, new_uuid, now, query, set_setting
-from ..utils import to_int
+from ..utils import length_errors, to_int
 
 bp = Blueprint("users", __name__, url_prefix="/admin")
 
@@ -69,6 +69,7 @@ def _read_user_form(user=None):
         errors.append(problem)
     if form["role"] not in ROLES:
         errors.append("Please choose a role.")
+    errors += length_errors([("The name", form["name"], "name")])
     return form, errors
 
 
@@ -86,7 +87,7 @@ def user_new():
             password = generate_temp_password()
             generated = True
         else:
-            problem = password_problem(password)
+            problem = password_problem(password, form["role"])
             if problem:
                 errors.append(problem)
         if not errors:
@@ -169,7 +170,7 @@ def user_reset_password(user_id):
         password = request.form.get("password", "").strip()
         if not password:
             password = generate_temp_password()
-        problem = password_problem(password)
+        problem = password_problem(password, user["role"])
         if problem:
             errors.append(problem)
         else:
@@ -222,6 +223,8 @@ def parse_user_csv(text):
         errs = []
         if not name:
             errs.append("name is empty")
+        elif len(name) > 100:
+            errs.append("name is longer than 100 characters")
         if role is None:
             errs.append(f"role “{row.get('role', '')}” is not admin, teacher or student")
         if username in seen:
@@ -231,8 +234,8 @@ def parse_user_csv(text):
             if problem:
                 errs.append(problem)
         password = row.get("password", "")
-        if password and password_problem(password):
-            errs.append(password_problem(password))
+        if password and role and password_problem(password, role):
+            errs.append(password_problem(password, role))
         class_name = row.get("class", "")
         class_id = None
         if class_name:
@@ -327,6 +330,7 @@ def _class_form(klass):
         form = {"name": request.form.get("name", "").strip(), "level": request.form.get("level", "").strip()}
         if not form["name"]:
             errors.append("Please type a class name, for example “Grade 7A”.")
+        errors += length_errors([("The class name", form["name"], "name"), ("The level", form["level"], "level")])
         dup = query("SELECT id FROM classes WHERE name = ? COLLATE NOCASE", (form["name"],), one=True)
         if dup and (klass is None or dup["id"] != klass["id"]):
             errors.append("A class with this name already exists.")
@@ -427,7 +431,6 @@ def settings():
         site_name = request.form.get("site_name", "").strip()[:60] or "STEMBox"
         changes = {
             "publish_mode": mode,
-            "allow_registration": "1" if request.form.get("allow_registration") else "0",
             "allow_remote_pull": "1" if request.form.get("allow_remote_pull") else "0",
             "site_name": site_name,
         }
@@ -437,7 +440,7 @@ def settings():
                 audit("settings.change", key, value)
         flash("Settings saved.", "success")
         return redirect(url_for("users.settings"))
-    current = {k: get_setting(k) for k in ("publish_mode", "allow_registration", "allow_remote_pull", "site_name")}
+    current = {k: get_setting(k) for k in ("publish_mode", "allow_remote_pull", "site_name")}
     return render_template("users/settings.html", current=current, modes=PUBLISH_MODES)
 
 

@@ -44,7 +44,7 @@ def register_cli(app):
         """Create an administrator account."""
         from .auth import hash_password, password_problem, username_problem
         username = username.strip().lower()
-        problem = username_problem(username) or password_problem(password)
+        problem = username_problem(username) or password_problem(password, "admin")
         if problem:
             raise click.ClickException(problem)
         db.execute(

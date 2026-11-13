@@ -17,6 +17,7 @@ STEMBox runs on a small, low-power computer such as a Raspberry Pi. Students and
 ## Features
 
 ### For students
+- A friendly home page with 3D-style illustrations, progress at a glance and one-tap "Continue learning"
 - Browse subjects and courses, and read lessons with pictures
 - Watch videos (with seeking; the video resumes where you stopped), listen to audio, read PDFs
 - Take multiple-choice quizzes, get marked straight away, and review the right answers
@@ -30,7 +31,8 @@ STEMBox runs on a small, low-power computer such as a Raspberry Pi. Students and
 - Monitor each class: completion rates, average scores, per-student detail, a per-question breakdown, and CSV export for Excel
 
 ### For administrators
-- Manage accounts: create, edit, switch off, reset passwords, **import from CSV**
+- **Only administrators create accounts.** There is no public sign-up; teachers and students log in with the details the administrator gives them.
+- Manage accounts: create, edit, switch on/off, reset passwords, **import from CSV**
 - Create classes and assign teachers and students
 - Choose the **publishing mode**: teachers publish directly, administrator approval, or mixed
 - An approval queue with notes back to the teacher
@@ -42,7 +44,8 @@ STEMBox runs on a small, low-power computer such as a Raspberry Pi. Students and
 - **Fully offline.** No CDN fonts, scripts or icons. A strict Content-Security-Policy blocks external requests.
 - **Lightweight.** Python, Flask and SQLite, with four small runtime dependencies and no build step. Runs on a Raspberry Pi.
 - **Simple, mobile-first UI.** Large buttons and plain language. Every page is checked at phone, tablet and desktop sizes.
-- **Secure by default.** Hashed passwords, CSRF protection, role checks on the server for every page, validated uploads stored under generated names, and a failed-login lockout.
+- **Secure by default.** scrypt-hashed passwords (8+ characters for staff, 6+ for students), CSRF protection, role checks on the server for every page, input length limits, validated uploads stored under generated names, a failed-login lockout, and automatic logout after 2 hours without activity.
+- **Fast on slow networks.** One locally hosted font (31 KB), small SVG artwork, week-long browser caching with versioned links, and no animations or autoplaying video.
 
 ---
 
@@ -94,8 +97,10 @@ Copy `.env.example` to `.env` and change what you need. Everything is optional.
 | `STEMBOX_PORT` | `5000` | |
 | `STEMBOX_STORAGE_DIR` | `./storage` | database, uploaded files and secret key: **back this folder up** |
 | `STEMBOX_MAX_VIDEO_MB` | `500` | upload limits; PDF 50, image 10 and audio 100 MB by default |
+| `STEMBOX_SESSION_IDLE_MINUTES` | `120` | log out after this many minutes without activity (`0` = never) |
+| `STEMBOX_HTTPS` | off | set to `1` only if STEMBox is served over HTTPS (makes the login cookie HTTPS-only) |
 
-The publishing mode, student self-registration, Wi-Fi sharing and the site name are set in the browser, under **Settings**.
+The publishing mode, Wi-Fi sharing and the site name are set in the browser, under **Settings**.
 
 ## Command-line tools
 
@@ -113,7 +118,7 @@ The publishing mode, student self-registration, Wi-Fi sharing and the site name 
 
 ```bash
 .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/python -m pytest             # 106 automated tests
+.venv/bin/python -m pytest             # 125 automated tests
 .venv/bin/python tools/ui_check.py     # layout check at phone/tablet/desktop widths (needs Chrome or Chromium)
 ```
 
@@ -131,7 +136,7 @@ See **[docs/TESTING.md](docs/TESTING.md)** for the full report and the manual te
 
 ```
 app/                    the application (one Flask blueprint per module)
-  auth/                 login, logout, registration, role decorators
+  auth/                 login, logout, password change, sessions, role decorators
   main/                 first-run setup, role dashboards
   users/                users, CSV import, classes, settings, activity log
   cms/                  subjects, courses, topics, lessons, files, search, approvals

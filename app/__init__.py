@@ -77,6 +77,16 @@ def create_app(overrides=None):
     from .cli import register_cli
     register_cli(app)
 
+    @app.url_defaults
+    def static_version(endpoint, values):
+        """Add ?v=<file modification time> to static links so browsers can cache
+        them for a week yet pick up a changed file immediately."""
+        if endpoint == "static" and "filename" in values and "v" not in values:
+            try:
+                values["v"] = int(os.stat(os.path.join(app.static_folder, values["filename"])).st_mtime)
+            except OSError:
+                pass
+
     from .nav import nav_links
 
     @app.context_processor

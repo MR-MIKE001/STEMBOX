@@ -11,7 +11,7 @@ Defaults chosen during the build, with the reason for each. Settings marked
 | Default publishing mode | **Mode 2: administrator approval** *(setting)* | Safest default: nothing reaches students unchecked. The admin can switch to *direct* or *mixed* in Settings. |
 | Mixed mode rule | A teacher publishes directly to a **course that belongs to a class they teach**. A course with no class (whole subject, visible to every student) needs approval. | Matches the brief's example. It is enforced in `app/permissions.py::can_publish_directly`. |
 | Max upload sizes | PDF **50 MB**, picture **10 MB**, audio **100 MB**, video **500 MB**, package **2 GB** *(config)* | Big enough for a typical lesson video on a Raspberry Pi SD card, small enough to stop accidents. `MAX_CONTENT_LENGTH` is set just above the largest limit. |
-| Self-registration | **Off by default.** The admin creates accounts (one at a time or by CSV). An optional toggle *(setting)* lets students register themselves, as students only. | Schools usually control who has accounts. Registration can never create a teacher or admin. |
+| Self-registration | **None.** Only administrators create accounts (one at a time or by CSV). There is no sign-up page and no setting to enable one; the old setting is removed by database migration 2. | The school controls who has access. Teachers and students log in with the credentials the administrator gives them. |
 | Wi-Fi transfer authentication | **HTTP Basic auth with an administrator account of the *source* STEMBox**, and the source must have *“Allow another STEMBox on this Wi-Fi to copy content”* switched on *(setting, default off)*. Failed attempts count towards the normal login lockout. Each pull is written to the source's audit log. | Simple, needs no extra keys, and requires two things: a source admin's consent (the toggle) and a source admin's password. |
 | Port and host | Host **0.0.0.0** (all interfaces), port **5000** *(config)* | 0.0.0.0 lets phones on the Wi-Fi connect. 5000 needs no root privileges on a Pi. |
 
@@ -49,7 +49,9 @@ Defaults chosen during the build, with the reason for each. Settings marked
 - We use **the browser's built-in PDF viewer** (`<object>`), with a large "Open the PDF" / "Download" fallback. Desktop browsers show PDFs inline. Most phone browsers open them in their own viewer. We didn't bundle pdf.js (about 3 MB of vendored code) to stay lightweight. It can be added later under `app/static/` if inline PDF on phones becomes a requirement.
 
 **Users and security**
-- **Passwords:** Werkzeug `scrypt` hashes, minimum 6 characters (many students are young). Temporary passwords skip look-alike characters (0/O, 1/l/I).
+- **Passwords:** Werkzeug `scrypt` hashes. Minimum **8 characters for teachers and administrators**, **6 for students** (many are young). The same rule applies when an admin creates or resets an account, in CSV import, at first-run setup and when users change their own password. Temporary passwords are 8 characters, without look-alike characters (0/O, 1/l/I).
+- **Sessions:** the signed cookie is named `stembox_session` and is `HttpOnly` and `SameSite=Lax`. It is also `Secure` when `STEMBOX_HTTPS=1`; that flag is off by default, because a classroom STEMBox is normally reached over plain HTTP on the LAN. A user is logged out after **2 hours without activity** (`STEMBOX_SESSION_IDLE_MINUTES`) and after 12 hours at most. Logging in starts a fresh session.
+- **Input validation:** every form is checked on the server. Required fields, formats (usernames, numbers, IDs that must belong to the right course) and maximum lengths are enforced: names 100 characters, titles 200, descriptions 2000, questions 2000, answers 500.
 - **Every account created by an admin, CSV import or the seed** must choose a new password at first login.
 - **After 5 wrong passwords**, that username is locked for 5 minutes (in memory, per server process).
 - **Resetting a password or switching an account off ends that user's existing sessions** at once (the session stores a fingerprint of the password hash).
@@ -71,6 +73,14 @@ Defaults chosen during the build, with the reason for each. Settings marked
 - **USB:** in the browser, the admin downloads the package and saves it to a USB stick, then uploads it on the other box. On the server itself, `flask export-package --out /media/usb/x.zip` and `flask import-package` work directly with a stick plugged into the Pi.
 - **Wi-Fi pull is limited to local-network addresses:** private, loopback or link-local IPs, or names ending in `.local`, `.lan`, `.home` or `.internal`. This stops the feature being used to reach the internet. System proxies are ignored.
 - **Kept packages:** the 10 most recent exports stay in `packages/`.
+
+**Student dashboard design**
+- **Font: Nunito Sans,** a rounded, readable font suited to secondary-school students. It is used across the whole app for consistency. It is stored locally as one 31 KB variable `woff2` file covering every weight (SIL Open Font License, see `app/static/fonts/OFL-LICENSE.txt`), preloaded, and uses `font-display: swap` so text never waits for it.
+- **3D illustrations appear on the student home page only.** They are original, hand-written SVG artwork in a 3D style (shaded faces, depth and soft shadows): a hero scene, plus maths, science, physics, biology, geography, computing, books and a trophy. Each is under 6 KB, has fixed width and height so nothing jumps while loading, and loads lazily below the fold. Each course gets artwork chosen from keywords in its title, then its subject name. To use other artwork (for example, renders from a designer), replace the files in `app/static/img/3d/` with the same names. WebP or PNG work too if the template's file extension is changed.
+- **Teacher and admin dashboards** keep the plain, professional layout, with no illustrations and no menu icons. Automated tests check this.
+- **Icons:** one small SVG sprite (`static/img/icons.svg`), used in the student menu and dashboard.
+- **No animations, transitions or autoplaying media.** Videos load metadata only until the student presses play.
+- **Caching:** static files are cached by browsers for a week. Their links carry a version number, so updates still show immediately.
 
 **UI**
 - **Mobile first.** Buttons and inputs are at least 44–48px tall. The menu collapses behind a "Menu" button below 900px. On phones, tables become stacked cards (`table.stack`). Labels use plain language ("Switch off" rather than "Deactivate", "Ask for approval to publish").

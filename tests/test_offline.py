@@ -15,7 +15,7 @@ EXTERNAL = re.compile(r"""(?:src|href|action|data)\s*=\s*["'](?:https?:)?//|url\
 def test_no_external_urls_in_templates_or_static():
     offenders = []
     for path in list((APP_DIR / "templates").rglob("*.html")) + list((APP_DIR / "static").rglob("*")):
-        if path.is_dir():
+        if path.is_dir() or path.suffix == ".txt":  # licence texts are never loaded by pages
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         if EXTERNAL.search(text):

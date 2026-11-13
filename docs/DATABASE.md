@@ -2,7 +2,12 @@
 
 - **Engine:** SQLite 3, in WAL mode, with foreign keys enforced (`PRAGMA foreign_keys = ON`).
 - **Location:** `storage/stembox.db` by default (`STEMBOX_DATABASE` to change).
-- **Source of truth:** `app/schema.sql` (migration 1). Later changes are appended to `MIGRATIONS` in `app/db.py`, and the applied version is kept in `PRAGMA user_version`.
+- **Source of truth:** `app/schema.sql` (migration 1). Later changes are appended to `MIGRATIONS` in `app/db.py`, and the applied version is kept in `PRAGMA user_version`. Migrations run automatically when the server starts.
+
+| Version | Change |
+|---|---|
+| 1 | Base schema (all tables below). |
+| 2 | Removes the obsolete `allow_registration` setting row. Public self-registration was removed; no table or column changed, and no data is lost. |
 - **Timestamps** are ISO-8601 UTC text, for example `2026-11-11T09:30:00+00:00`.
 - **UUIDs:** every table that can be exported or synced has a `uuid` column, so the same item is recognised on another STEMBox.
 - **Sample data:** rows created by `flask seed-dev` have `is_sample = 1`, and `flask unseed-dev` removes them.
@@ -89,7 +94,6 @@ Key/value text. The keys:
 | Key | Default | Meaning |
 |---|---|---|
 | `publish_mode` | `approval` | `direct`, `approval` or `mixed` |
-| `allow_registration` | `0` | students may create their own account |
 | `allow_remote_pull` | `0` | other STEMBoxes may pull content over Wi-Fi |
 | `site_name` | `STEMBox` | name in the page header |
 

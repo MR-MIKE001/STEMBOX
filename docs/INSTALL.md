@@ -77,9 +77,11 @@ Copy `.env.example` to `.env` and change what you need. Every setting is optiona
 | `STEMBOX_STORAGE_DIR` | `./storage` | database, uploaded files and secret key: **back this up** |
 | `STEMBOX_PACKAGES_DIR` | `./packages` | exported content packages |
 | `STEMBOX_MAX_*_MB` | 50 / 10 / 100 / 500 / 2048 | upload limits for PDF, image, audio, video and packages |
+| `STEMBOX_SESSION_IDLE_MINUTES` | `120` | log a user out after this many minutes without activity (`0` = never) |
+| `STEMBOX_HTTPS` | off | set to `1` only behind HTTPS; the login cookie is then sent over HTTPS only |
 | `STEMBOX_SECRET_KEY` | auto-generated | only set it if you run several servers that must share logins |
 
-Publishing mode, self-registration, Wi-Fi sharing and the site name are changed in the browser, under **Settings** (administrator).
+Publishing mode, Wi-Fi sharing and the site name are changed in the browser, under **Settings** (administrator). Accounts are always created by an administrator; there is no public sign-up.
 
 ## 4. Command-line tools
 
@@ -117,6 +119,6 @@ Stop the server, back up `storage/`, replace the code files (but **not** `storag
 
 ```bash
 .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/python -m pytest              # 106 automated tests
+.venv/bin/python -m pytest              # 125 automated tests
 .venv/bin/python tools/ui_check.py      # layout check at phone, tablet and desktop widths (needs Chrome/Chromium)
 ```

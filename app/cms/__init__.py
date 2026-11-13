@@ -8,7 +8,7 @@ from .. import publishing, storage
 from ..auth import roles_required
 from ..db import audit, execute, get_db, get_setting, new_uuid, now, query
 from ..permissions import (can_manage_course, can_publish_directly, class_ids, manageable_courses_clause)
-from ..utils import to_int
+from ..utils import length_errors, to_int
 
 bp = Blueprint("cms", __name__, url_prefix="/content")
 
@@ -169,6 +169,8 @@ def _subject_form(subject):
         form = {"name": request.form.get("name", "").strip(), "description": request.form.get("description", "").strip()}
         if not form["name"]:
             errors.append("Please type the subject name, for example “Mathematics”.")
+        errors += length_errors([("The subject name", form["name"], "name"),
+                                 ("The description", form["description"], "short")])
         dup = query("SELECT id FROM subjects WHERE name = ? COLLATE NOCASE", (form["name"],), one=True)
         if dup and (subject is None or dup["id"] != subject["id"]):
             errors.append("A subject with this name already exists.")
@@ -216,6 +218,8 @@ def _read_course_form():
     errors = []
     if not form["title"]:
         errors.append("Please type the course title.")
+    errors += length_errors([("The course title", form["title"], "title"), ("The level", form["level"], "level"),
+                             ("The description", form["description"], "description")])
     if not form["subject_id"] or not query("SELECT 1 FROM subjects WHERE id = ?", (form["subject_id"],), one=True):
         errors.append("Please choose a subject.")
     allowed = {c["id"] for c in _class_choices()}
@@ -328,8 +332,8 @@ def course_delete(course_id):
 def topic_add(course_id):
     get_course_or_404(course_id)
     title = request.form.get("title", "").strip()
-    if not title:
-        flash("Please type a topic name.", "error")
+    if not title or len(title) > 200:
+        flash("Please type a topic name (up to 200 characters).", "error")
     else:
         pos = query("SELECT COALESCE(MAX(position), -1) + 1 AS p FROM topics WHERE course_id = ?", (course_id,), one=True)["p"]
         execute("INSERT INTO topics (uuid, course_id, title, position) VALUES (?, ?, ?, ?)",
@@ -406,6 +410,8 @@ def _read_lesson_form(course_id):
     errors = []
     if not form["title"]:
         errors.append("Please type the lesson title.")
+    errors += length_errors([("The lesson title", form["title"], "title"),
+                             ("The new topic name", form["new_topic"], "title")])
     if len(form["body"]) > 200_000:
         errors.append("The lesson text is too long.")
     if form["topic_id"] and not query("SELECT 1 FROM topics WHERE id = ? AND course_id = ?",
@@ -572,7 +578,7 @@ def resource_upload(lesson_id):
     except storage.UploadError as exc:
         flash(str(exc), "error")
         return redirect(url_for("cms.lesson_detail", lesson_id=lesson_id))
-    title = request.form.get("title", "").strip() or Path(info["original_name"]).stem
+    title = (request.form.get("title", "").strip() or Path(info["original_name"]).stem)[:200]
     _insert_resource(lesson_id, rtype, title, info)
     _touch("lessons", lesson_id)
     flash(f"“{title}” uploaded.", "success")
@@ -589,6 +595,7 @@ def resource_edit(resource_id):
         title = request.form.get("title", "").strip()
         if not title:
             errors.append("Please type a title.")
+        errors += length_errors([("The title", title, "title")])
         upload = request.files.get("file")
         info = None
         if not errors and upload and upload.filename:

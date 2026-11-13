@@ -80,15 +80,19 @@ def test_first_run_setup_creates_admin(app, client):
     assert "/login" in client.get("/setup").headers["Location"]
 
 
-def test_registration_toggle(app, client, users):
-    assert client.get("/register").status_code == 403
+def test_no_self_registration(app, client, users):
+    """Only administrators create accounts: there is no public sign-up, even if the old setting is sent."""
+    assert client.get("/register").status_code == 404
     login(client, "admin")
     client.post("/admin/settings", data={"publish_mode": "approval", "allow_registration": "1", "site_name": "STEMBox"})
+    assert db_one(app, "SELECT COUNT(*) FROM settings WHERE key = 'allow_registration'")[0] == 0
     client.post("/logout")
     response = client.post("/register", data={"name": "Self Made", "username": "selfie",
-                                              "password": "abcdef1", "password2": "abcdef1"})
-    assert response.status_code == 302
-    assert db_one(app, "SELECT role FROM users WHERE username = 'selfie'")[0] == "student"
+                                              "password": "abcdef12", "password2": "abcdef12"})
+    assert response.status_code == 404
+    assert db_one(app, "SELECT COUNT(*) FROM users WHERE username = 'selfie'")[0] == 0
+    page = client.get("/login").data.decode()
+    assert "Create an account" not in page and "Ask your teacher" in page
 
 
 # ---------------------------------------------------------------- role enforcement

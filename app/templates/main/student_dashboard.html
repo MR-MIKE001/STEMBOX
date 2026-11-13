@@ -1,55 +1,109 @@
 {% extends "base.html" %}
 {% import "_macros.html" as m %}
 {% block title %}Home{% endblock %}
+{% macro icon(name, cls="icon") %}<svg class="{{ cls }}" aria-hidden="true" focusable="false"><use href="{{ url_for('static', filename='img/icons.svg') }}#{{ name }}"></use></svg>{% endmacro %}
 {% block content %}
-<h1>Hello, {{ current_user['name'] }}!</h1>
+<div class="student-home">
 
-{% if continue_lesson %}
-<section class="card">
-  <h2>Continue where you stopped</h2>
-  <p><strong>{{ continue_lesson['title'] }}</strong> <small class="muted">· {{ continue_lesson['course_title'] }}</small></p>
-  <a class="btn btn-primary btn-block" href="{{ url_for('learning.lesson', lesson_id=continue_lesson['id']) }}">Continue learning →</a>
-</section>
-{% endif %}
-
-<h2>My courses</h2>
-{% if course_rows %}
-<div class="grid grid-3">
-  {% for row in course_rows %}
-  <a class="tile" href="{{ url_for('learning.course', course_id=row.course['id']) }}">
-    <h3>{{ row.course['title'] }}</h3>
-    <p>{{ row.course['subject_name'] }}{% if row.course['level'] %} · {{ row.course['level'] }}{% endif %}</p>
-    <div class="meta">{{ row.done }} of {{ row.total }} lessons finished {{ m.progress_bar(row.done, row.total, "Lessons finished") }}</div>
-  </a>
-  {% endfor %}
-</div>
-{% else %}
-{{ m.empty("There are no lessons for you yet. Your teacher will add them soon.") }}
-{% endif %}
-
-<div class="grid grid-2">
-  {% if new_lessons %}
-  <section class="card">
-    <h2>New for you</h2>
-    <ul class="list">
-      {% for l in new_lessons %}
-      <li><span class="grow"><a href="{{ url_for('learning.lesson', lesson_id=l['id']) }}"><strong>{{ l['title'] }}</strong></a><br><small>{{ l['course_title'] }}</small></span></li>
-      {% endfor %}
-    </ul>
+  <section class="s-hero">
+    <div class="s-hero-text">
+      <p class="s-eyebrow">{{ greeting }}</p>
+      <h1>Hi, {{ first_name }}!</h1>
+      {% if continue_lesson %}
+        <p>Pick up where you stopped: <strong>{{ continue_lesson['title'] }}</strong>
+          <span class="s-hero-sub">({{ continue_lesson['course_title'] }})</span></p>
+        <a class="btn s-btn-light" href="{{ url_for('learning.lesson', lesson_id=continue_lesson['id']) }}">
+          {{ icon("play") }} Continue learning</a>
+      {% elif course_rows %}
+        <p>Ready to learn something new today?</p>
+        <a class="btn s-btn-light" href="{{ url_for('learning.subjects') }}">{{ icon("grid") }} Explore subjects</a>
+      {% else %}
+        <p>Your lessons will appear here as soon as your teacher publishes them.</p>
+      {% endif %}
+    </div>
+    <img class="s-hero-art" src="{{ url_for('static', filename='img/3d/hero.svg') }}" alt="" width="360" height="260">
   </section>
-  {% endif %}
-  <section class="card">
-    <h2>My latest quiz results</h2>
-    {% if results %}
-    <ul class="list">
-      {% for a in results %}
-      {% set pct = percent(a['score'], a['total']) %}
-      <li><span class="grow"><strong>{{ a['quiz_title'] }}</strong><br><small>{{ a['finished_at']|dt }}</small></span>
-        <span class="badge {{ 'badge-pass' if pct >= a['pass_mark'] else 'badge-fail' }}">{{ a['score'] }}/{{ a['total'] }} · {{ pct }}%</span></li>
-      {% endfor %}
-    </ul>
-    <a class="btn btn-secondary" href="{{ url_for('quizzes.my_results') }}">All my results</a>
-    {% else %}<p class="muted">No quizzes taken yet.</p>{% endif %}
+
+  <section class="s-stats" aria-label="My progress">
+    <div class="s-stat s-stat-green">
+      <span class="s-stat-icon">{{ icon("check") }}</span>
+      <span><span class="s-stat-value">{{ stats.lessons_done }}</span><span class="s-stat-label">lessons finished</span></span>
+    </div>
+    <div class="s-stat s-stat-amber">
+      <span class="s-stat-icon">{{ icon("trophy") }}</span>
+      <span><span class="s-stat-value">{{ stats.quizzes_passed }}</span><span class="s-stat-label">quizzes passed</span></span>
+    </div>
+    <div class="s-stat s-stat-violet">
+      <span class="s-stat-icon">{{ icon("chart") }}</span>
+      <span><span class="s-stat-value">{{ stats.avg_score ~ '%' if stats.avg_score is not none else '–' }}</span><span class="s-stat-label">average quiz score</span></span>
+    </div>
   </section>
+
+  <section>
+    <div class="s-section-head">
+      <h2>My courses</h2>
+      {% if course_rows %}<a href="{{ url_for('learning.subjects') }}">All subjects {{ icon("arrow", "icon icon-sm") }}</a>{% endif %}
+    </div>
+    {% if course_rows %}
+    <div class="s-courses">
+      {% for row in course_rows %}
+      {% set c = row.course %}
+      <a class="s-course" href="{{ url_for('learning.course', course_id=c['id']) }}">
+        <img class="s-course-art" src="{{ url_for('static', filename='img/3d/' ~ row.art ~ '.svg') }}" alt=""
+             width="72" height="72" loading="lazy" decoding="async">
+        <span class="s-course-body">
+          <span class="s-course-subject">{{ c['subject_name'] }}{% if c['level'] %} · {{ c['level'] }}{% endif %}</span>
+          <span class="s-course-title">{{ c['title'] }}</span>
+          <span class="s-course-progress">
+            <progress value="{{ row.done }}" max="{{ row.total or 1 }}" aria-label="Lessons finished"></progress>
+            <span>{{ row.done }}/{{ row.total }}</span>
+          </span>
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+      <img src="{{ url_for('static', filename='img/3d/books.svg') }}" alt="" width="96" height="96" loading="lazy">
+      <p>There are no lessons for you yet. Your teacher will add them soon.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="grid grid-2 s-lists">
+    <section class="card">
+      <h2>{{ icon("sparkle", "icon icon-accent") }} New for you</h2>
+      {% if new_lessons %}
+      <ul class="s-list">
+        {% for l in new_lessons %}
+        <li><a href="{{ url_for('learning.lesson', lesson_id=l['id']) }}">
+          <span class="s-list-icon">{{ icon("book") }}</span>
+          <span class="grow"><strong>{{ l['title'] }}</strong><br><small>{{ l['course_title'] }}</small></span>
+          {{ icon("arrow", "icon icon-sm") }}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">You have opened every lesson. Great work!</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <h2>{{ icon("trophy", "icon icon-accent") }} My latest quiz results</h2>
+      {% if results %}
+      <ul class="s-list">
+        {% for a in results %}
+        {% set pct = percent(a['score'], a['total']) %}
+        <li><a href="{{ url_for('quizzes.attempt', attempt_id=a['id']) }}">
+          <span class="grow"><strong>{{ a['quiz_title'] }}</strong><br><small>{{ a['finished_at']|dt }}</small></span>
+          <span class="badge {{ 'badge-pass' if pct >= a['pass_mark'] else 'badge-fail' }}">{{ a['score'] }}/{{ a['total'] }} · {{ pct }}%</span></a></li>
+        {% endfor %}
+      </ul>
+      <a class="btn btn-secondary btn-block" href="{{ url_for('quizzes.my_results') }}">See all my results</a>
+      {% else %}
+      <div class="s-empty-small">
+        <img src="{{ url_for('static', filename='img/3d/trophy.svg') }}" alt="" width="64" height="64" loading="lazy">
+        <p class="muted">No quizzes taken yet. Finish a lesson, then try its quiz!</p>
+      </div>
+      {% endif %}
+    </section>
+  </div>
 </div>
 {% endblock %}

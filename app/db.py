@@ -13,11 +13,12 @@ SCHEMA_FILE = Path(__file__).with_name("schema.sql")
 # to change the schema of existing installations without losing data.
 MIGRATIONS = [
     SCHEMA_FILE.read_text(encoding="utf-8"),
+    # 2: public self-registration was removed; only administrators create accounts.
+    "DELETE FROM settings WHERE key = 'allow_registration';",
 ]
 
 DEFAULT_SETTINGS = {
     "publish_mode": "approval",      # direct | approval | mixed
-    "allow_registration": "0",       # students may create their own account
     "allow_remote_pull": "0",        # other STEMBoxes may pull content over Wi-Fi
     "site_name": "STEMBox",
 }

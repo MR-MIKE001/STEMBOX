@@ -33,7 +33,7 @@ def setup():
         password = request.form.get("password", "")
         if not form["name"]:
             errors.append("Please type your full name.")
-        for problem in (username_problem(form["username"]), password_problem(password)):
+        for problem in (username_problem(form["username"]), password_problem(password, "admin")):
             if problem:
                 errors.append(problem)
         if password != request.form.get("password2", ""):
